@@ -45,7 +45,7 @@ ScrollViewKCM {
             width: rulesListView.width
             sourceComponent: rulesListDelegate
         }
-        currentIndex: kcm.editIndex
+        currentIndex: kcm.editingIndex
 
         Rectangle {
             id: dropIndicator

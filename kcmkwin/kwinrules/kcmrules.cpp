@@ -58,8 +58,8 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
                       " for how to customize window behavior.</p>"));
 
     connect(m_rulesModel, &RulesModel::descriptionChanged, this, [this]{
-        if (m_editIndex >=0 && m_editIndex < m_rulesListModel.count()) {
-            m_rulesListModel.replace(m_editIndex, m_rulesModel->description());
+        if (m_editingIndex >=0 && m_editingIndex < m_rulesListModel.count()) {
+            m_rulesListModel.replace(m_editingIndex, m_rulesModel->description());
             emit rulesListModelChanged();
         }
     } );
@@ -98,9 +98,15 @@ void KCMKWinRules::load()
     setNeedsSave(false);
     emit rulesListModelChanged();
 
-    // Reset current rule editor
-    if (m_editIndex > 0) {
-        KConfigGroup cfgGroup = rulesConfigGroup(m_editIndex);
+    // Check if current index is no longer valid
+    if (m_editingIndex >= m_rulesListModel.count()) {
+        m_editingIndex = -1;
+        pop();
+        emit editingIndexChanged();
+    }
+    // Reset current index for rule editor
+    if (m_editingIndex > 0) {
+        KConfigGroup cfgGroup = rulesConfigGroup(m_editingIndex);
         m_rulesModel->readFromConfig(&cfgGroup);
     }
 }
@@ -119,7 +125,7 @@ void KCMKWinRules::updateState()
     KConfigGroup cfg(m_rulesConfig, QLatin1String("General"));
     cfg.writeEntry("count", m_rulesListModel.count());
 
-    emit editIndexChanged();
+    emit editingIndexChanged();
     emit rulesListModelChanged();
 
     updateNeedsSave();
@@ -142,11 +148,11 @@ void KCMKWinRules::pushRulesEditor()
 
 void KCMKWinRules::saveCurrentRule()
 {
-    if (m_editIndex < 0) {
+    if (m_editingIndex < 0) {
         return;
     }
     if (needsSave()) {
-        KConfigGroup cfgGroup = rulesConfigGroup(m_editIndex);
+        KConfigGroup cfgGroup = rulesConfigGroup(m_editingIndex);
         m_rulesModel->writeToConfig(&cfgGroup);
     }
 }
@@ -156,7 +162,7 @@ void KCMKWinRules::newRule()
 {
     saveCurrentRule();
 
-    m_editIndex = m_rulesListModel.count();
+    m_editingIndex = m_rulesListModel.count();
     blockSignals(true);
     m_rulesModel->initRules();
     saveCurrentRule();
@@ -168,43 +174,47 @@ void KCMKWinRules::newRule()
     pushRulesEditor();
 }
 
-int KCMKWinRules::editIndex() const
+int KCMKWinRules::editingIndex() const
 {
-    return m_editIndex;
+    return m_editingIndex;
 }
 
 void KCMKWinRules::editRule(int index)
 {
-    Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
-
+    if (index < 0 || index >= m_rulesListModel.count()) {
+        return;
+    }
     saveCurrentRule();
 
-    m_editIndex = index;
+    m_editingIndex = index;
     blockSignals(true);
     KConfigGroup cfgGroup = rulesConfigGroup(index);
     m_rulesModel->readFromConfig(&cfgGroup);
     blockSignals(false);
 
-    emit editIndexChanged();
+    emit editingIndexChanged();
 
     pushRulesEditor();
 }
 
 void KCMKWinRules::removeRule(int index)
 {
-    Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
+    const int lastIndex = m_rulesListModel.count() - 1;
+    if (index < 0 || index > lastIndex) {
+        return;
+    }
+
     saveCurrentRule();
 
-    if (m_editIndex == index) {
-        m_editIndex = -1;
+    if (m_editingIndex == index) {
+        m_editingIndex = -1;
         pop();
     }
 
     // First move the deleted group to the end, so the other rules get rearranged
-    const int lastIndex = m_rulesListModel.count() - 1;
     moveConfigGroup(index, lastIndex);
-
     rulesConfigGroup(lastIndex).deleteGroup();
+
     m_rulesListModel.removeAt(index);
 
     updateState();
@@ -256,17 +266,13 @@ void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
     auxGroup.copyTo(&toGroup);
     auxGroup.deleteGroup();
 
-    // Update editIndex
-    if (m_editIndex == sourceIndex) {
-        m_editIndex = destIndex;
-    } else if (sourceIndex < destIndex) {
-        if (m_editIndex > sourceIndex && m_editIndex <= destIndex) {
-            m_editIndex -= 1;
-        }
-    } else if (sourceIndex > destIndex) {
-        if (m_editIndex < sourceIndex && m_editIndex >= destIndex) {
-            m_editIndex += 1;
-        }
+    // Update current index
+    if (m_editingIndex == sourceIndex) {
+        m_editingIndex = destIndex;
+    } else if (m_editingIndex > sourceIndex && m_editingIndex <= destIndex) {
+        m_editingIndex -= 1;
+    } else if (m_editingIndex < sourceIndex && m_editingIndex >= destIndex) {
+        m_editingIndex += 1;
     }
 }
 
