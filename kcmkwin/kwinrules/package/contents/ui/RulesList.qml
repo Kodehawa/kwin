@@ -67,7 +67,7 @@ ScrollViewKCM {
             Kirigami.Action {
                 text: i18n("Import")
                 iconName: "document-import"
-                onTriggered: kcm.import();
+                onTriggered: kcm.importRules();
             }
             ,
             Kirigami.Action {

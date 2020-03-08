@@ -56,6 +56,7 @@ public slots:
     void moveRule(int sourceIndex, int destIndex);
 
     void exportRule(int index);
+    void importRules();
 
 signals:
     void rulesListModelChanged();

@@ -259,6 +259,64 @@ void KCMKWinRules::exportRule(int index)
     config.sync();
 }
 
+void KCMKWinRules::importRules()
+{
+    QString path = QFileDialog::getOpenFileName(nullptr,
+                                                i18n("Import Rules"),
+                                                QDir::home().absolutePath(),
+                                                i18n("KWin Rules (*.kwinrule)"));
+
+    if (path.isEmpty()) {
+        return;
+    }
+
+    KConfig config(path, KConfig::SimpleConfig);
+    const QStringList groups = config.groupList();
+    if (groups.isEmpty()) {
+        return;
+    }
+
+    for (const QString &groupName : groups) {
+        KConfigGroup importGroup(&config, groupName);
+
+        const bool remove = importGroup.readEntry("DeleteRule", false);
+        const QString importDescription = importGroup.readEntry("Description", QString());
+        if (importDescription.isEmpty()) {
+            continue;
+        }
+
+        // By default, set the new index at the end of the list
+        int newIndex = m_rulesListModel.count();
+        // Try to find a rule with the same description to replace
+        for (int index = 0; index < m_rulesListModel.count(); index++) {
+            if (m_rulesListModel.at(index) == importDescription) {
+                newIndex = index;
+                break;
+            }
+        }
+
+        if (remove) {
+            removeRule(newIndex);
+            continue;
+        }
+
+        KConfigGroup newGroup = rulesConfigGroup(newIndex);
+        newGroup.deleteGroup();
+        importGroup.copyTo(&newGroup);
+
+        if (newIndex == m_rulesListModel.count()) {
+            m_rulesListModel.append(importDescription);
+        }
+
+        // Reset rule editor if the current rule changed when importing
+        if (m_editingIndex == newIndex) {
+            m_rulesModel->readFromConfig(&newGroup);
+        }
+    }
+
+    updateState();
+}
+
 void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
 {
     if (sourceIndex == destIndex) {
