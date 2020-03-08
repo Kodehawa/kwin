@@ -21,6 +21,7 @@
 
 #include "kcmrules.h"
 
+#include <QFileDialog>
 #include <QtDBus>
 
 #include <KAboutData>
@@ -237,6 +238,26 @@ void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
     updateState();
 }
 
+void KCMKWinRules::exportRule(int index)
+{
+    Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
+
+    saveCurrentRule();
+
+    const QString description = m_rulesListModel.at(index);
+    const QString defaultPath = QDir(QDir::home()).filePath(description + QStringLiteral(".kwinrule"));
+    const QString path = QFileDialog::getSaveFileName(nullptr, i18n("Export Rules"), defaultPath,
+                                                      i18n("KWin Rules (*.kwinrule)"));
+    if (path.isEmpty())
+        return;
+
+    KConfig config(path, KConfig::SimpleConfig);
+    KConfigGroup exportGroup(&config, description);
+    exportGroup.deleteGroup();
+
+    rulesConfigGroup(index).copyTo(&exportGroup);
+    config.sync();
+}
 
 void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
 {

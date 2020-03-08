@@ -123,7 +123,7 @@ ScrollViewKCM {
                         Kirigami.Action {
                             text: i18n("Export")
                             iconName: "document-export"
-                            onTriggered: kcm.export(index);
+                            onTriggered: kcm.exportRule(index);
                         }
                         ,
                         Kirigami.Action {

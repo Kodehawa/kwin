@@ -47,7 +47,6 @@ public:
 public slots:
     void load() override;
     void save() override;
-    void updateNeedsSave();
 
     int editingIndex() const;
     void editRule(int index);
@@ -56,11 +55,14 @@ public slots:
     void removeRule(int index);
     void moveRule(int sourceIndex, int destIndex);
 
+    void exportRule(int index);
+
 signals:
     void rulesListModelChanged();
     void editingIndexChanged();
 
 private slots:
+    void updateNeedsSave();
     void updateState();
 
 private:
