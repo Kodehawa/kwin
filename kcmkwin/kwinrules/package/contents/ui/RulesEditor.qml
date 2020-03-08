@@ -76,20 +76,11 @@ ScrollViewKCM {
     // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
     footer: Kirigami.InlineMessage {
         id: warningMessage
-        property bool showWarning: rulesModel.showWarning
-
+        visible: rulesModel.showWarning
         text: i18n("You have specified the window class as unimportant.\n" +
                    "This means the settings will possibly apply to windows from all " +
                    "applications. If you really want to create a generic setting, it is " +
                    "recommended you at least limit the window types to avoid special window " +
                    "types.")
-
-        onShowWarningChanged: {
-            warningMessage.visible = showWarning;
-        }
-    }
-
-    Component.onCompleted: {
-        warningMessage.visible = rulesModel.showWarning;
     }
 }
