@@ -40,6 +40,10 @@ ScrollViewKCM {
             placeholderText: i18n("Search...")
             focusSequence: "Ctrl+F"
 
+            onTextChanged: {
+                rulesModel.filter.searchText = text;
+            }
+
             rightActions: [
                 Kirigami.Action {
                     iconName: "edit-clear"
@@ -54,8 +58,13 @@ ScrollViewKCM {
         QQC2.ToolButton {
             id: showAllButton
             icon.name: checked ? 'view-visible' : 'view-hidden'
-            checkable: true
             text: i18n("Show all rules")
+            checkable: true
+            enabled: searchField.text.trim() == ""
+            checked: rulesModel.filter.showAll
+            onToggled: {
+                rulesModel.filter.showAll = checked;
+            }
         }
     }
 
@@ -63,13 +72,11 @@ ScrollViewKCM {
         id: enabledRulesView
         clip: true
 
-        model: rulesModel
-        delegate: RuleItemDelegate {
-            showAll: showAllButton.checked
-        }
+        model: rulesModel.filter
+        delegate: RuleItemDelegate {}
         section {
-            delegate: Kirigami.ListSectionHeader { label: section }
             property: "section"
+            delegate: Kirigami.ListSectionHeader { label: section }
         }
     }
 

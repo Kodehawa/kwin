@@ -37,11 +37,23 @@ namespace KWin
 
 RulesModel::RulesModel(QObject *parent)
     : QAbstractListModel(parent)
+    , m_filterModel(new RulesFilterModel(this))
 {
     qmlRegisterUncreatableType<RuleItem>("org.kde.kcms.kwinrules", 1, 0, "RuleItem",
                                          QStringLiteral("Do not create objects of type RuleItem"));
+    qmlRegisterUncreatableType<RulesFilterModel>("org.kde.kcms.kwinrules", 1, 0, "RulesFilterModel",
+                                                 QStringLiteral("Do not create objects of type RulesFilterModel"));
+
+    m_filterModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    m_filterModel->setSourceModel(this);
 
     populateRuleList();
+}
+
+RulesModel::~RulesModel()
+{
+    delete m_filterModel;
+    delete m_activities;
 }
 
 QHash< int, QByteArray > RulesModel::roleNames() const
@@ -737,6 +749,39 @@ QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
     }
 
     return modelData;
+}
+
+
+bool RulesFilterModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+{
+    if (m_isSearching) {
+        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    }
+    if (m_showAll) {
+        return true;
+    }
+
+    const QModelIndex index = sourceModel()->index(source_row, 0);
+    return sourceModel()->data(index, RulesModel::EnabledRole).toBool();
+}
+
+void RulesFilterModel::setSearchText(const QString &text)
+{
+    const QString searchText = text.trimmed();
+    m_isSearching = !searchText.isEmpty();
+    setFilterFixedString(searchText);
+}
+
+bool RulesFilterModel::showAll() const
+{
+    return m_showAll;
+}
+
+void RulesFilterModel::setShowAll(bool showAll)
+{
+    m_showAll = showAll;
+    invalidateFilter();
+    emit showAllChanged();
 }
 
 } //namespace

@@ -25,23 +25,11 @@ import org.kde.kirigami 2.10 as Kirigami
 
 Kirigami.AbstractListItem {
     id: ruleDelegate
-
-    property bool showAll: false
-    property bool itemIsEnabled: model.enabled
-
-    enabled: itemIsEnabled || showAll
-    height: enabled ? implicitHeight : 0
-    opacity: (enabled) ? 1 : 0
     focus: true
 
-    Kirigami.Theme.colorSet: Kirigami.Theme.View
+    property var ruleEnabled: model.enabled
 
-    Behavior on height {
-        PropertyAnimation { duration: 2 * Kirigami.Units.longDuration }
-    }
-    Behavior on opacity {
-        PropertyAnimation { duration: 2 * Kirigami.Units.longDuration }
-    }
+    Kirigami.Theme.colorSet: Kirigami.Theme.View
 
     RowLayout {
         spacing: Kirigami.Units.smallSpacing
@@ -71,7 +59,6 @@ Kirigami.AbstractListItem {
         }
 
         QQC2.Label {
-            id: itemLabel
             text: model.name
             Layout.minimumWidth: 12 * Kirigami.Units.gridUnit
         }
@@ -89,7 +76,7 @@ Kirigami.AbstractListItem {
             flat: true
 
             visible: count > 0
-            enabled: itemIsEnabled
+            enabled: ruleEnabled
 
             model: policyModel
             onActivated: {
@@ -106,15 +93,15 @@ Kirigami.AbstractListItem {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
-            enabled: itemIsEnabled
+            enabled: model.enabled
 
             ruleValue: model.value
             ruleOptions: model.options
             controlType: model.type
 
             onValueEdited: (value) => {
-                print ("Rule changed: " + model.key + " = " + value)
-                model.value = value
+                print ("Rule changed: " + model.key + " = " + value);
+                model.value = value;
             }
         }
     }

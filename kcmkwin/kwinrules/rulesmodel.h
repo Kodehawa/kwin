@@ -25,6 +25,7 @@
 #include <rules.h>
 
 #include <QAbstractListModel>
+#include <QSortFilterProxyModel>
 #include <QObject>
 
 #ifdef KWIN_BUILD_ACTIVITIES
@@ -37,12 +38,16 @@
 namespace KWin
 {
 
+class RulesFilterModel;
+
 class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
+    //TODO: Export type RulesFilterModel
+    Q_PROPERTY(RulesFilterModel *filter MEMBER m_filterModel CONSTANT)
 
 public:
     enum RulesRole {
@@ -63,6 +68,7 @@ public:
 
 public:
     explicit RulesModel(QObject *parent = nullptr);
+    ~RulesModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QHash<int, QByteArray> roleNames() const override;
@@ -104,9 +110,33 @@ private:
 private:
     QList<RuleItem *> m_ruleList;
     QHash<QString, RuleItem *> m_rules;
+    RulesFilterModel *m_filterModel;
 #ifdef KWIN_BUILD_ACTIVITIES
     KActivities::Consumer *m_activities;
 #endif
+};
+
+
+class RulesFilterModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+    Q_PROPERTY(bool showAll READ showAll WRITE setShowAll NOTIFY showAllChanged)
+    Q_PROPERTY(QString searchText WRITE setSearchText)
+
+public:
+    explicit RulesFilterModel(QObject *parent) : QSortFilterProxyModel(parent) {};
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
+
+    void setSearchText(const QString &text);
+    bool showAll() const;
+    void setShowAll(bool showAll);
+
+signals:
+    void showAllChanged();
+
+private:
+    bool m_isSearching = false;
+    bool m_showAll = false;
 };
 
 }
