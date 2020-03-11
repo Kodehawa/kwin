@@ -26,6 +26,7 @@
 #include <QIcon>
 #include <QQmlEngine>
 #include <QTemporaryFile>
+#include <QtDBus>
 
 #include <KColorSchemeManager>
 #include <KLocalizedString>
@@ -299,13 +300,16 @@ void RulesModel::prefillProperties(const QVariantMap &info)
 
     const auto ruleForProperty = x11PropertyHash();
     for (QString &property : info.keys()) {
-        const QString ruleKey = ruleForProperty.value(property, QString());
-        if (ruleKey.isEmpty() || m_rules[ruleKey]->isEnabled()) {
+        if (!ruleForProperty.contains(property)) {
             continue;
         }
+        const QString ruleKey = ruleForProperty.value(property, QString());
+        Q_ASSERT(hasRule(ruleKey));
 
-        const QVariant value = info.value(property);
-        m_rules[ruleKey]->setValue(value);
+        // Only prefill disabled or empty properties
+        if (!m_rules[ruleKey]->isEnabled() || m_rules[ruleKey]->value().toString().isEmpty()) {
+            m_rules[ruleKey]->setValue(info.value(property));
+        }
     }
 
     endResetModel();
@@ -623,6 +627,14 @@ void RulesModel::populateRuleList()
 const QHash<QString, QString> RulesModel::x11PropertyHash()
 {
     static const auto propertyToRule = QHash<QString, QString> {
+        /* The original detection dialog allows to choose depending on "Match complete window class":
+         *     if Match Complete == false: wmclass = "resourceClass"
+         *     if Match Complete == true:  wmclass = "resourceName" + " " + "resourceClass"
+         */
+        { "resourceName",       "wmclass"       },
+        { "caption",            "title"         },
+        { "role",               "windowrole"    },
+        { "clientMachine",      "clientmachine" },
         { "x11DesktopNumber",   "desktop"       },
         { "maximizeHorizontal", "maximizehoriz" },
         { "maximizeVertical",   "maximizevert"  },
@@ -640,7 +652,6 @@ const QHash<QString, QString> RulesModel::x11PropertyHash()
     };
     return propertyToRule;
 };
-
 
 QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {
@@ -782,6 +793,37 @@ void RulesFilterModel::setShowAll(bool showAll)
     m_showAll = showAll;
     invalidateFilter();
     emit showAllChanged();
+}
+
+
+void RulesModel::detectWindowProperties(int secs)
+{
+    QTimer::singleShot(secs*1000, this, &RulesModel::selectX11Window);
+}
+
+void RulesModel::selectX11Window()
+{
+    QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
+                                                          QStringLiteral("/KWin"),
+                                                          QStringLiteral("org.kde.KWin"),
+                                                          QStringLiteral("queryWindowInfo"));
+
+    QDBusPendingReply<QVariantMap> async = QDBusConnection::sessionBus().asyncCall(message);
+
+    QDBusPendingCallWatcher *callWatcher = new QDBusPendingCallWatcher(async, this);
+    connect(callWatcher, &QDBusPendingCallWatcher::finished, this,
+            [this](QDBusPendingCallWatcher *self) {
+                QDBusPendingReply<QVariantMap> reply = *self;
+                self->deleteLater();
+                if (!reply.isValid()) {
+                    return;
+                }
+                const QVariantMap windowInfo = reply.value();
+                //TODO: Improve UI to suggest/select the detected properties.
+                // For now, just prefill unused rules
+                prefillProperties(windowInfo);
+            }
+    );
 }
 
 } //namespace

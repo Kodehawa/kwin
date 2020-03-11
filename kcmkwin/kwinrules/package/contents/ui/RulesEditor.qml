@@ -69,7 +69,7 @@ ScrollViewKCM {
     }
 
     view: ListView {
-        id: enabledRulesView
+        id: rulesView
         clip: true
 
         model: rulesModel.filter
@@ -81,13 +81,42 @@ ScrollViewKCM {
     }
 
     // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
-    footer: Kirigami.InlineMessage {
-        id: warningMessage
-        visible: rulesModel.showWarning
-        text: i18n("You have specified the window class as unimportant.\n" +
-                   "This means the settings will possibly apply to windows from all " +
-                   "applications. If you really want to create a generic setting, it is " +
-                   "recommended you at least limit the window types to avoid special window " +
-                   "types.")
+    footer: GridLayout {
+        id: kcmFooter
+        columns: 2
+
+        QQC2.Button {
+            Layout.fillWidth: true
+            text: i18n("Detect window properties")
+            icon.name: "edit-find"    // TODO: Better icon for "Detect window properties"
+            onClicked: {
+                rulesModel.detectWindowProperties(detection_delay.value);
+            }
+        }
+
+        QQC2.SpinBox {
+            id: detection_delay
+            from: 0
+            to: 30
+            textFromValue: (value, locale) => {
+                return value == 0 ? i18n("instantly")
+                                  : i18np("after 1 second", "after %1 seconds", value)
+            }
+        }
+
+        Kirigami.InlineMessage {
+            id: warningMessage
+
+            Layout.columnSpan: kcmFooter.columns
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            visible: rulesModel.showWarning
+            text: i18n("You have specified the window class as unimportant.\n" +
+                    "This means the settings will possibly apply to windows from all " +
+                    "applications. If you really want to create a generic setting, it is " +
+                    "recommended you at least limit the window types to avoid special window " +
+                    "types.")
+        }
     }
 }

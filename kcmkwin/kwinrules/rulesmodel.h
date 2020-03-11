@@ -89,6 +89,9 @@ public:
     QString description() const;
     bool isWarningShown() const;
 
+public slots:
+    void detectWindowProperties(int secs);
+
 signals:
     void descriptionChanged();
     void showWarningChanged();
@@ -106,6 +109,9 @@ private:
     QList<OptionsModel::Data> placementModelData() const;
     QList<OptionsModel::Data> focusModelData() const;
     QList<OptionsModel::Data> colorSchemesModelData() const;
+
+private slots:
+    void selectX11Window();
 
 private:
     QList<RuleItem *> m_ruleList;
