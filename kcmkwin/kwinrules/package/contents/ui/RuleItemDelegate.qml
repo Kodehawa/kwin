@@ -80,7 +80,7 @@ Kirigami.AbstractListItem {
 
             model: policyModel
             onActivated: {
-                print ("Policy changed for rule " + key + ": policyIndex = " + index);
+                print ("Policy changed for rule " + key + ": " + currentValue);
                 policy = currentValue;
             }
         }

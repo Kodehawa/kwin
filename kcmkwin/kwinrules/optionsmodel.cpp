@@ -140,34 +140,56 @@ QString RulePolicy::policyKey(const QString &key) const
 
 QList<RulePolicy::Data> RulePolicy::policyOptions(RulePolicy::Type type)
 {
+    static const auto stringMatchOptions = QList<RulePolicy::Data> {
+        {Rules::UnimportantMatch, i18n("Unimportant")},
+        {Rules::ExactMatch,       i18n("Exact Match")},
+        {Rules::SubstringMatch,   i18n("Substring Match")},
+        {Rules::RegExpMatch,      i18n("Regular Expression")}
+    };
+
+    static const auto setRuleOptions = QList<RulePolicy::Data> {
+        {Rules::DontAffect,
+            i18n("Do Not Affect"),
+            i18n("The window property will not be affected and therefore the default handling for it will be used."
+                 "\nSpecifying this will block more generic window settings from taking effect.")},
+        {Rules::Apply,
+            i18n("Apply Initially"),
+            i18n("The window property will be only set to the given value after the window is created."
+                 "\nNo further changes will be affected.")},
+        {Rules::Remember,
+            i18n("Remember"),
+            i18n("The value of the window property will be remembered and, every time the window"
+                 " is created, the last remembered value will be applied.")},
+        {Rules::Force,
+            i18n("Force"),
+            i18n("The window property will be always forced to the given value.")},
+        {Rules::ApplyNow,
+            i18n("Apply Now"),
+            i18n("The window property will be set to the given value immediately and will not be affected later"
+                 "\n(this action will be deleted afterwards).")},
+        {Rules::ForceTemporarily,
+            i18n("Force Temporarily"),
+            i18n("The window property will be forced to the given value until it is hidden"
+                 "\n(this action will be deleted after the window is hidden).")}
+    };
+
+    static auto forceRuleOptions = QList<RulePolicy::Data> {
+        setRuleOptions.at(0),  // Rules::DontAffect
+        setRuleOptions.at(3),  // Rules::Force
+        setRuleOptions.at(5),  // Rules::ForceTemporarily
+    };
+
     switch (type) {
     case NoPolicy:
         return {};
     case StringMatch:
-        return {
-            {Rules::UnimportantMatch, i18n("Unimportant")},
-            {Rules::ExactMatch,       i18n("Exact Match")},
-            {Rules::SubstringMatch,   i18n("Substring Match")},
-            {Rules::RegExpMatch,      i18n("Regular Expression")}
-        };
+        return stringMatchOptions;
     case SetRule:
-        return {
-            {Rules::DontAffect,       i18n("Do Not Affect")},
-            {Rules::Apply,            i18n("Apply Initially")},
-            {Rules::Remember,         i18n("Remember")},
-            {Rules::Force,            i18n("Force")},
-            {Rules::ApplyNow,         i18n("Apply Now")},
-            {Rules::ForceTemporarily, i18n("Force Temporarily")},
-        };
+        return setRuleOptions;
     case ForceRule:
-        return {
-            {Rules::DontAffect,       i18n("Do Not Affect")},
-            {Rules::Force,            i18n("Force")},
-            {Rules::ForceTemporarily, i18n("Force Temporarily")},
-        };
+        return forceRuleOptions;
     }
     return {};
 }
 
 }   //namespace
-

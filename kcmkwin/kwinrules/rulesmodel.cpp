@@ -646,16 +646,16 @@ QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {
     static const auto modelData = QList<OptionsModel::Data> {
         //TODO: Find/create better icons
-        { NET::Normal,  i18n("Normal Window")     , QStringLiteral("window") },
-        { NET::Dialog,  i18n("Dialog Window")     , QStringLiteral("window-duplicate")         },
-        { NET::Utility, i18n("Utility Window")    , QStringLiteral("dialog-object-properties") },
-        { NET::Dock,    i18n("Dock (panel)")      , QStringLiteral("list-remove")              },
-        { NET::Toolbar, i18n("Toolbar")           , QStringLiteral("tools")                    },
-        { NET::Menu,    i18n("Torn-Off Menu")     , QStringLiteral("overflow-menu-left")       },
-        { NET::Splash,  i18n("Splash Screen")     , QStringLiteral("embosstool")               },
-        { NET::Desktop, i18n("Desktop")           , QStringLiteral("desktop")                  },
-//        { NET::Override,i18n("Unmanaged Window")   },  deprecated
-        { NET::TopMenu, i18n("Standalone Menubar"), QStringLiteral("open-menu-symbolic")       }
+        { NET::Normal,  i18n("Normal Window")     , QIcon::fromTheme("window")                   },
+        { NET::Dialog,  i18n("Dialog Window")     , QIcon::fromTheme("window-duplicate")         },
+        { NET::Utility, i18n("Utility Window")    , QIcon::fromTheme("dialog-object-properties") },
+        { NET::Dock,    i18n("Dock (panel)")      , QIcon::fromTheme("list-remove")              },
+        { NET::Toolbar, i18n("Toolbar")           , QIcon::fromTheme("tools")                    },
+        { NET::Menu,    i18n("Torn-Off Menu")     , QIcon::fromTheme("overflow-menu-left")       },
+        { NET::Splash,  i18n("Splash Screen")     , QIcon::fromTheme("embosstool")               },
+        { NET::Desktop, i18n("Desktop")           , QIcon::fromTheme("desktop")                  },
+        // { NET::Override, i18n("Unmanaged Window")   },  deprecated
+        { NET::TopMenu, i18n("Standalone Menubar"), QIcon::fromTheme("open-menu-symbolic")       }
     };
     return modelData;
 }
@@ -667,10 +667,10 @@ QList<OptionsModel::Data> RulesModel::virtualDesktopsModelData() const
         modelData << OptionsModel::Data{
             desktopId,
             QString::number(desktopId).rightJustified(2) + QStringLiteral(": ") + KWindowSystem::desktopName(desktopId),
-            QStringLiteral("virtual-desktops")
+            QIcon::fromTheme("virtual-desktops")
         };
     }
-    modelData << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops"), QStringLiteral("window-pin") };
+    modelData << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops"), QIcon::fromTheme("window-pin") };
     return modelData;
 }
 
@@ -684,14 +684,14 @@ QList<OptionsModel::Data> RulesModel::activitiesModelData() const
     modelData << OptionsModel::Data{
         QString::fromLatin1("00000000-0000-0000-0000-000000000000"),
         i18n("All Activities"),
-        QStringLiteral("activities")
+        QIcon::fromTheme("activities")
     };
 
     const auto activities = m_activities->activities(KActivities::Info::Running);
     if (m_activities->serviceStatus() == KActivities::Consumer::Running) {
         for (const QString &activityId : activities) {
             const KActivities::Info info(activityId);
-            modelData << OptionsModel::Data{ activityId, info.name(), info.icon() };
+            modelData << OptionsModel::Data{ activityId, info.name(), QIcon::fromTheme(info.icon()) };
         }
     }
 

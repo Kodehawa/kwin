@@ -33,27 +33,28 @@ namespace KWin {
 class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
-    //FIXME: After Qt 5.14 the QML ComboBox will allow to use the valueRole directly
-    //       instead of changing the index. Remove this exposed property
+    //TODO: After Qt 5.14 the QML ComboBox will allow to use the valueRole directly
+    //      instead of changing the index. Remove this exposed property
     Q_PROPERTY(int selectedIndex READ selectedIndex NOTIFY selectedIndexChanged)
 
 public:
     struct Data {
-        Data(const QVariant &value, const QString &text) : value(value), text(text) {}
-        Data(const QVariant &value, const QString &text, const QString &iconName)
-            : value(value)
-            , text(text)
-            , icon(QIcon::fromTheme(iconName))
-            {}
-        Data(const QVariant &value, const QString &text, const QIcon &icon)
+        Data(const QVariant &value, const QString &text, const QIcon &icon = {}, const QString &description = {})
             : value(value)
             , text(text)
             , icon(icon)
+            , description(description)
             {}
+        Data(const QVariant &value, const QString &text, const QString &description)
+            : value(value)
+            , text(text)
+            , description(description)
+            {}
+
         QVariant value;
         QString text;
         QIcon icon;
-        QString description {};
+        QString description;
     };
 
 public:
@@ -70,7 +71,7 @@ public:
 
     void updateModelData(const QList<Data> &data);
 
-    //FIXME: Remove after Qt 5.14
+    //TODO: Remove after Qt 5.14
     int selectedIndex() const;
 
 signals:

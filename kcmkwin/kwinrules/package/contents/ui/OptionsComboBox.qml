@@ -59,6 +59,11 @@ QQC2.ComboBox {
             }
         }
 
+        QQC2.ToolTip {
+            text: model.description
+            visible: hovered && (model.description != "")
+        }
+
         Component.onCompleted: {
             values[index] = model.value;
             optionsCombo.popup.width = Math.max(implicitWidth, optionsCombo.width, optionsCombo.popup.width);
