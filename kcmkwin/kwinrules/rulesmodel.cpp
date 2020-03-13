@@ -280,6 +280,7 @@ void RulesModel::prefillProperties(const QVariantMap &info)
 {
     beginResetModel();
 
+    // Properties that cannot be directly applied via x11PropertyHash
     const QString position = QStringLiteral("%1,%2").arg(info.value("x").toInt())
                                                     .arg(info.value("y").toInt());
     const QString size = QStringLiteral("%1,%2").arg(info.value("width").toInt())
@@ -296,6 +297,14 @@ void RulesModel::prefillProperties(const QVariantMap &info)
     }
     if (!m_rules["maxsize"]->isEnabled()) {
         m_rules["maxsize"]->setValue(size);
+    }
+
+    NET::WindowType window_type = static_cast<NET::WindowType>(info.value("type", 0).toInt());
+    if (!m_rules["types"]->isEnabled() || m_rules["types"]->value() == 0) {
+        if (window_type == NET::Unknown) {
+            window_type = NET::Normal;
+        }
+        m_rules["types"]->setValue(1 << window_type);
     }
 
     const auto ruleForProperty = x11PropertyHash();
