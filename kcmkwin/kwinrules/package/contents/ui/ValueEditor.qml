@@ -159,7 +159,7 @@ Loader {
             QQC2.SpinBox {
                 id: coordX
                 editable: true
-                Layout.preferredWidth: coordWidth
+                implicitWidth: coordWidth
                 from: 0
                 to: 4098
                 value: coords[0]
@@ -168,13 +168,14 @@ Loader {
             QQC2.Label {
                 id: coordSeparator
                 text: i18nc("(x, y) coordinates separator in size/position","x")
+                horizontalAlignment: Text.AlignHCenter
             }
             QQC2.SpinBox {
                 id: coordY
                 editable: true
                 from: 0
                 to: 4098
-                Layout.preferredWidth: coordWidth
+                implicitWidth: coordWidth
                 value: coords[1]
                 onValueModified: valueEditor.valueEdited(coordX.value + "," + coordY.value)
             }

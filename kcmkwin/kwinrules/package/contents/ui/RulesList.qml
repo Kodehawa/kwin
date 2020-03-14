@@ -29,9 +29,8 @@ ScrollViewKCM {
 
     property int dragIndex: -1
     property int dropIndex: -1
-    property Item dropItem: (dropIndex >= 0) ? rulesListView.contentItem.children[dropIndex]
-                                             : rulesListView
 
+    // FIXME: ScrollViewKCM.qml:73:13: QML Control: Binding loop detected for property "implicitHeight"
     implicitWidth: Kirigami.Units.gridUnit * 35
     implicitHeight: Kirigami.Units.gridUnit * 25
 
@@ -53,12 +52,22 @@ ScrollViewKCM {
         Rectangle {
             id: dropIndicator
             x: 0
-            y: (dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height
             z: 100
             width: parent.width
             height: Kirigami.Units.smallSpacing
             color: Kirigami.Theme.highlightColor
             visible: (dropIndex >= 0) && (dropIndex != dragIndex)
+
+            Connections {
+                target: rulesListKCM
+                onDropIndexChanged: {
+                    if (dropIndex >= 0) {
+                        // TODO: After Qt 5.13 we can use ListView.itemAtIndex(index)
+                        var dropItem = rulesListView.contentItem.children[dropIndex];
+                        dropIndicator.y = (dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height;
+                    }
+                }
+            }
         }
     }
 
@@ -102,7 +111,6 @@ ScrollViewKCM {
                         dropIndex = newIndex;
                     }
                     onDropped: {
-                        print ("(onDropped) from index " + dragIndex + " to " + dropIndex)
                         if (dropIndex >= 0 && dropIndex != dragIndex) {
                             kcm.moveRule(dragIndex, dropIndex);
                         }
