@@ -25,6 +25,7 @@
 #include <QtDBus>
 
 #include <KAboutData>
+#include <KConfig>
 #include <KLocalizedString>
 #include <KPluginFactory>
 

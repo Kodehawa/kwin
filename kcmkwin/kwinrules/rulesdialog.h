@@ -21,7 +21,7 @@
 #define KWIN_RULESDIALOG_H
 
 #include "rulesmodel.h"
-#include "ruleswidget.h"
+#include "../../rules.h"
 
 #include <QDialog>
 
@@ -30,8 +30,7 @@ namespace KWin
 
 class Rules;
 
-class RulesDialog
-    : public QDialog
+class RulesDialog : public QDialog
 {
     Q_OBJECT
 
@@ -42,15 +41,11 @@ public:
 
 protected:
     void accept() override;
-private Q_SLOTS:
-    void displayHints();
-    void toggleUI(bool showQuickUI);
+
 private:
-    bool isQuickUIShown = true;
     RulesModel* m_rulesModel;
-    QWidget *quickWidget;
-    RulesWidget* widget;
-    Rules* rules;
+    QWidget *m_quickWidget;
+    Rules* m_rules;
 };
 
 } // namespace

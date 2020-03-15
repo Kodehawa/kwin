@@ -21,12 +21,11 @@
 #pragma once
 
 #include <rules.h>
-#include "rulesmodel.h"
 #include "rulebooksettings.h"
+#include "rulesmodel.h"
 
 #include <QStringListModel>
 
-#include <KConfig>
 #include <KQuickAddons/ConfigModule>
 
 

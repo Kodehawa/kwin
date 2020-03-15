@@ -18,15 +18,14 @@
  */
 
 #include "rulesdialog.h"
-#include "../../rules.h"
 
+#include <QDialogButtonBox>
 #include <QQuickItem>
 #include <QQuickView>
+#include <QLayout>
 #include <QPushButton>
-#include <QTimer>
 
-#include <KConfig>
-#include <KMessageBox>
+#include <KLocalizedString>
 
 
 namespace KWin
@@ -50,89 +49,37 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
     quickView->rootObject()->setProperty("rulesModel", QVariant::fromValue(m_rulesModel));
 
-    quickWidget = QWidget::createWindowContainer(quickView, this);
-    quickWidget->setMinimumSize(QSize(680, 700));
-    quickWidget->setVisible(isQuickUIShown);
-    layout()->addWidget(quickWidget);
-
-    // Classic widget initialization
-    widget = new RulesWidget(this);
-    widget->setVisible(!isQuickUIShown);
-    layout()->addWidget(widget);
+    m_quickWidget = QWidget::createWindowContainer(quickView, this);
+    m_quickWidget->setMinimumSize(QSize(680, 700));
+    layout()->addWidget(m_quickWidget);
 
     QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttons, SIGNAL(accepted()), SLOT(accept()));
     connect(buttons, SIGNAL(rejected()), SLOT(reject()));
-
-    // Toggle QML and classic UI for debugging
-    QPushButton* toggleButton = buttons->addButton(QStringLiteral("Toggle classic/new UI"), QDialogButtonBox::ActionRole);
-    toggleButton->setCheckable(true);
-    toggleButton->setChecked(isQuickUIShown);
-    connect(toggleButton, &QPushButton::toggled, this, &RulesDialog::toggleUI);
     layout()->addWidget(buttons);
-}
-
-void RulesDialog::toggleUI(bool showQuickUI)
-{
-    if (isQuickUIShown == showQuickUI) {
-        return;
-    }
-    isQuickUIShown = showQuickUI;
-
-    if (showQuickUI) {
-        m_rulesModel->importFromRules(widget->rules());
-        widget->hide();
-        quickWidget->show();
-    } else {
-        widget->setRules(m_rulesModel->exportToRules());
-        quickWidget->hide();
-        widget->show();
-    }
 }
 
 // window is set only for Alt+F3/Window-specific settings, because the dialog
 // is then related to one specific window
 Rules* RulesDialog::edit(Rules* r, const QVariantMap& info, bool show_hints)
 {
-    rules = r;
-    widget->setRules(rules);
+    Q_UNUSED(show_hints);
 
-    m_rulesModel->importFromRules(rules);
+    m_rules = r;
 
-    if (!info.isEmpty())
-    {
-        widget->prepareWindowSpecific(info);
+    m_rulesModel->importFromRules(m_rules);
+    if (!info.isEmpty()) {
+        m_rulesModel->prefillProperties(info);
     }
-    if (show_hints)
-        QTimer::singleShot(0, this, SLOT(displayHints()));
 
     exec();
 
-    return rules;
-}
-
-void RulesDialog::displayHints()
-{
-    QString str = "<qt><p>";
-    str += i18n("This configuration dialog allows altering settings only for the selected window"
-                " or application. Find the setting you want to affect, enable the setting using the checkbox,"
-                " select in what way the setting should be affected and to which value.");
-#if 0 // maybe later
-    str += "</p><p>" + i18n("Consult the documentation for more details.");
-#endif
-    str += "</p></qt>";
-    KMessageBox::information(this, str, QString(), "displayhints");
+    return m_rules;
 }
 
 void RulesDialog::accept()
 {
-    if (isQuickUIShown) {
-        rules = m_rulesModel->exportToRules();
-    } else {
-        if (!widget->finalCheck())
-            return;
-        rules = widget->rules();
-    }
+    m_rules = m_rulesModel->exportToRules();
     QDialog::accept();
 }
 
