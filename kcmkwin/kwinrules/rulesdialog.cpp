@@ -64,19 +64,14 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     connect(buttons, SIGNAL(accepted()), SLOT(accept()));
     connect(buttons, SIGNAL(rejected()), SLOT(reject()));
 
-    // DEBUG Buttons
+    // Toggle QML and classic UI for debugging
     QPushButton* toggleButton = buttons->addButton(QStringLiteral("Toggle classic/new UI"), QDialogButtonBox::ActionRole);
     toggleButton->setCheckable(true);
     toggleButton->setChecked(isQuickUIShown);
     connect(toggleButton, &QPushButton::toggled, this, &RulesDialog::toggleUI);
-
-    QPushButton* testButton = buttons->addButton(QStringLiteral("Test"), QDialogButtonBox::ActionRole);
-    connect(testButton, &QPushButton::clicked, this, &RulesDialog::testButtonClicked);
-
     layout()->addWidget(buttons);
 }
 
-// DEBUG: Toggles QML and classic UI for debugging
 void RulesDialog::toggleUI(bool showQuickUI)
 {
     if (isQuickUIShown == showQuickUI) {
@@ -95,31 +90,18 @@ void RulesDialog::toggleUI(bool showQuickUI)
     }
 }
 
-// DEBUG: Helper action button
-void RulesDialog::testButtonClicked()
-{
-    QVariantMap info {
-        {"x", 100 }, {"y", 200 },
-        {"width", 300 }, {"height", 400 },
-        {"type", 27}
-    };
-
-    m_rulesModel->prefillProperties(info);
-}
-
 // window is set only for Alt+F3/Window-specific settings, because the dialog
 // is then related to one specific window
 Rules* RulesDialog::edit(Rules* r, const QVariantMap& info, bool show_hints)
 {
     rules = r;
-
     widget->setRules(rules);
+
     m_rulesModel->importFromRules(rules);
 
     if (!info.isEmpty())
     {
         widget->prepareWindowSpecific(info);
-        m_rulesModel->prefillProperties(info);
     }
     if (show_hints)
         QTimer::singleShot(0, this, SLOT(displayHints()));
