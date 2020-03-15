@@ -5,22 +5,17 @@ add_definitions(-DKCMRULES)
 ########### next target ###############
 
 include_directories(../../)
-set(kwinrules_MOC_HDRS yesnobox.h ../../cursor.h ../../plugins/platforms/x11/standalone/x11cursor.h)
+set(kwinrules_MOC_HDRS ../../cursor.h ../../plugins/platforms/x11/standalone/x11cursor.h)
 qt5_wrap_cpp(kwinrules_MOC_SRCS ${kwinrules_MOC_HDRS})
 set(kwinrules_SRCS
-    ruleswidget.cpp
     optionsmodel.cpp
     ruleitem.cpp
     rulesmodel.cpp
     rulesdialog.cpp
-    ruleslist.cpp
     main.cpp
     kwinsrc.cpp
-    detectwidget.cpp
     ${kwinrules_MOC_SRCS}
 )
-
-ki18n_wrap_ui(kwinrules_SRCS ruleslist.ui detectwidget.ui editshortcut.ui ruleswidgetbase.ui)
 
 add_executable(kwin_rules_dialog ${kwinrules_SRCS})
 
@@ -50,19 +45,6 @@ endif()
 target_link_libraries(kwin_rules_dialog ${kcm_libs} ${kwin_kcm_rules_XCB_LIBS})
 
 install(TARGETS kwin_rules_dialog DESTINATION ${LIBEXEC_INSTALL_DIR})
-
-########### next target ###############
-
-set(kcm_kwinrules_PART_SRCS
-    kcm.cpp
-    ${kwinrules_SRCS}
-)
-
-add_library(kcm_kwinrules MODULE ${kcm_kwinrules_PART_SRCS})
-
-target_link_libraries(kcm_kwinrules ${kcm_libs} ${kwin_kcm_rules_XCB_LIBS})
-
-install(TARGETS kcm_kwinrules DESTINATION ${PLUGIN_INSTALL_DIR})
 
 ########### next target ###############
 
