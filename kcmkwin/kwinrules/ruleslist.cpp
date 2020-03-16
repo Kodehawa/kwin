@@ -24,7 +24,7 @@
 
 #include "../../rules.h"
 #include "rulesettings.h"
-#include "ruleswidget.h"
+#include "rulesdialog.h"
 
 namespace KWin
 {

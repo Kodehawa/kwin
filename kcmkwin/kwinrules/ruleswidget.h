@@ -22,8 +22,8 @@
 
 #include <config-kwin.h>
 
-#include <QDialog>
 #include <kkeysequencewidget.h>
+#include "detectwidget.h"
 
 #include "ui_ruleswidgetbase.h"
 #include "ui_editshortcut.h"
@@ -36,9 +36,6 @@ namespace KActivities {
 
 namespace KWin
 {
-
-class Rules;
-class DetectDialog;
 
 class RulesWidget
     : public QWidget, public Ui::RulesWidgetBase
@@ -119,22 +116,6 @@ private:
     void prefillUnusedValues(const QVariantMap& info);
     DetectDialog* detect_dlg;
     bool detect_dlg_ok;
-};
-
-class RulesDialog
-    : public QDialog
-{
-    Q_OBJECT
-public:
-    explicit RulesDialog(QWidget* parent = nullptr, const char* name = nullptr);
-    Rules* edit(Rules* r, const QVariantMap& info, bool show_hints);
-protected:
-    void accept() override;
-private Q_SLOTS:
-    void displayHints();
-private:
-    RulesWidget* widget;
-    Rules* rules;
 };
 
 class EditShortcut

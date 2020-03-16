@@ -1,12 +1,26 @@
 # KI18N Translation Domain for this library
 add_definitions(-DTRANSLATION_DOMAIN=\"kcmkwinrules\")
 add_definitions(-DKCMRULES)
+
 ########### next target ###############
 
 include_directories(../../)
 set(kwinrules_MOC_HDRS yesnobox.h ../../cursor.h ../../plugins/platforms/x11/standalone/x11cursor.h)
 qt5_wrap_cpp(kwinrules_MOC_SRCS ${kwinrules_MOC_HDRS})
-set(kwinrules_SRCS ../../rulebooksettings.cpp ruleswidget.cpp ruleslist.cpp kwinsrc.cpp detectwidget.cpp main.cpp ${kwinrules_MOC_SRCS})
+
+set(kwinrules_SRCS
+    ../../rulebooksettings.cpp
+    ruleswidget.cpp
+    optionsmodel.cpp
+    ruleitem.cpp
+    rulesmodel.cpp
+    rulesdialog.cpp
+    ruleslist.cpp
+    main.cpp
+    kwinsrc.cpp
+    detectwidget.cpp
+    ${kwinrules_MOC_SRCS}
+)
 
 ki18n_wrap_ui(kwinrules_SRCS ruleslist.ui detectwidget.ui editshortcut.ui ruleswidgetbase.ui)
 
@@ -24,6 +38,7 @@ set(kwin_kcm_rules_XCB_LIBS
 set(kcm_libs
     Qt5::Concurrent
     Qt5::X11Extras
+    Qt5::QuickWidgets
 
     KF5::Completion
     KF5::ConfigWidgets
@@ -43,13 +58,46 @@ install(TARGETS kwin_rules_dialog DESTINATION ${LIBEXEC_INSTALL_DIR})
 
 ########### next target ###############
 
-set(kcm_kwinrules_PART_SRCS kcm.cpp ${kwinrules_SRCS})
+set(kcm_kwinrules_PART_SRCS
+    kcm.cpp
+    ${kwinrules_SRCS}
+)
 
 add_library(kcm_kwinrules MODULE ${kcm_kwinrules_PART_SRCS})
 
 target_link_libraries(kcm_kwinrules ${kcm_libs} ${kwin_kcm_rules_XCB_LIBS})
 
 install(TARGETS kcm_kwinrules DESTINATION ${PLUGIN_INSTALL_DIR})
+
+########### next target ###############
+
+set(kcmkwinrules_qml_SRCS
+    kcmrules.cpp
+    ${kwinrules_SRCS}
+)
+
+add_library(kcm_kwinrules_qml MODULE ${kcmkwinrules_qml_SRCS})
+
+target_link_libraries(kcm_kwinrules_qml
+    Qt5::Quick
+
+    KF5::I18n
+    KF5::ConfigWidgets
+    KF5::CoreAddons
+    KF5::QuickAddons
+    KF5::WindowSystem
+
+    ${kcm_libs}
+    ${kwin_kcm_rules_XCB_LIBS}
+)
+
+kcoreaddons_desktop_to_json(kcm_kwinrules_qml "kcm_kwinrules_qml.desktop" SERVICE_TYPES kcmodule.desktop)
+
+# This desktop file is installed only for retrocompatibility with sycoca
+install(TARGETS kcm_kwinrules_qml DESTINATION ${KDE_INSTALL_PLUGINDIR}/kcms)
+install(FILES kcm_kwinrules_qml.desktop DESTINATION ${KDE_INSTALL_KSERVICES5DIR})
+
+kpackage_install_package(package kcm_kwinrules_qml kcms)
 
 ########### install files ###############
 
