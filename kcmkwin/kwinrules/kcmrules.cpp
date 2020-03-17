@@ -39,7 +39,7 @@ namespace KWin
 
 KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
     : KQuickAddons::ConfigModule(parent, arguments)
-    , m_rulesConfig(new KConfig(s_configFile, KConfig::NoGlobals))
+    , m_ruleBook(new RuleBookSettings(this))
     , m_rulesModel(new RulesModel(this))
 {
     auto about = new KAboutData(QStringLiteral("kcm_kwinrules_qml"),
@@ -59,63 +59,55 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
                       " for how to customize window behavior.</p>"));
 
     connect(m_rulesModel, &RulesModel::descriptionChanged, this, [this]{
-        if (m_editingIndex >=0 && m_editingIndex < m_rulesListModel.count()) {
-            m_rulesListModel.replace(m_editingIndex, m_rulesModel->description());
-            emit rulesListModelChanged();
+        if (m_editingIndex >=0 && m_editingIndex < m_ruleBook->count()) {
+            m_ruleList.at(m_editingIndex)->description = m_rulesModel->description();
+            emit ruleBookModelChanged();
         }
     } );
     connect(m_rulesModel, &RulesModel::dataChanged, this, &KCMKWinRules::updateNeedsSave);
 }
 
 KCMKWinRules::~KCMKWinRules() {
-    m_rulesConfig->markAsClean();
-    delete m_rulesConfig;
+    delete m_ruleBook;
 }
 
 
-QStringList KCMKWinRules::rulesListModel() const
+QStringList KCMKWinRules::ruleBookModel() const
 {
-    return m_rulesListModel;
+    QStringList ruleDescriptionList;
+    for (const Rules *rule : qAsConst(m_ruleList)) {
+        ruleDescriptionList.append(rule->description);
+    }
+    return ruleDescriptionList;
 }
 
 
 void KCMKWinRules::load()
 {
-    m_rulesConfig->markAsClean();
-    m_rulesConfig->reparseConfiguration();
-
-    KConfigGroup cfg(m_rulesConfig, QLatin1String("General"));
-    int rulesCount = cfg.readEntry("count", 0);
-
-    m_rulesListModel.clear();
-    m_rulesListModel.reserve(rulesCount);
-
-    for (int index = 0; index < rulesCount; index++) {
-        cfg = rulesConfigGroup(index);
-        const QString ruleDescription = cfg.readEntry("Description");
-        m_rulesListModel.append(ruleDescription);
-    }
+    m_ruleBook->load();
+    const auto rules = m_ruleBook->rules();
+    m_ruleList = QList<Rules *>::fromVector(rules);
 
     setNeedsSave(false);
-    emit rulesListModelChanged();
+    emit ruleBookModelChanged();
 
     // Check if current index is no longer valid
-    if (m_editingIndex >= m_rulesListModel.count()) {
+    if (m_editingIndex >= m_ruleList.count()) {
         m_editingIndex = -1;
         pop();
         emit editingIndexChanged();
     }
     // Reset current index for rule editor
     if (m_editingIndex > 0) {
-        KConfigGroup cfgGroup = rulesConfigGroup(m_editingIndex);
-        m_rulesModel->readFromConfig(&cfgGroup);
+        m_rulesModel->importFromRules(m_ruleList.at(m_editingIndex));
     }
 }
 
 void KCMKWinRules::save()
 {
     saveCurrentRule();
-    m_rulesConfig->sync();
+    m_ruleBook->setRules(m_ruleList.toVector());
+    m_ruleBook->save();
 
     QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
     QDBusConnection::sessionBus().send(message);
@@ -123,11 +115,10 @@ void KCMKWinRules::save()
 
 void KCMKWinRules::updateState()
 {
-    KConfigGroup cfg(m_rulesConfig, QLatin1String("General"));
-    cfg.writeEntry("count", m_rulesListModel.count());
+    m_ruleBook->setCount(m_ruleList.count());
 
     emit editingIndexChanged();
-    emit rulesListModelChanged();
+    emit ruleBookModelChanged();
 
     updateNeedsSave();
 }
@@ -138,42 +129,17 @@ void KCMKWinRules::updateNeedsSave()
     emit needsSaveChanged();
 }
 
-void KCMKWinRules::pushRulesEditor()
-{
-    if (depth() < 2) {
-        push(QStringLiteral("RulesEditor.qml"));
-    }
-
-    setCurrentIndex(1);
-}
-
 void KCMKWinRules::saveCurrentRule()
 {
     if (m_editingIndex < 0) {
         return;
     }
     if (needsSave()) {
-        KConfigGroup cfgGroup = rulesConfigGroup(m_editingIndex);
-        m_rulesModel->writeToConfig(&cfgGroup);
+        delete(m_ruleList[m_editingIndex]);
+        m_ruleList[m_editingIndex] = m_rulesModel->exportToRules();
     }
 }
 
-
-void KCMKWinRules::newRule()
-{
-    saveCurrentRule();
-
-    m_editingIndex = m_rulesListModel.count();
-    blockSignals(true);
-    m_rulesModel->initRules();
-    saveCurrentRule();
-    blockSignals(false);
-
-    m_rulesListModel.append(m_rulesModel->description());
-    updateState();
-
-    pushRulesEditor();
-}
 
 int KCMKWinRules::editingIndex() const
 {
@@ -182,81 +148,96 @@ int KCMKWinRules::editingIndex() const
 
 void KCMKWinRules::editRule(int index)
 {
-    if (index < 0 || index >= m_rulesListModel.count()) {
+    if (index < 0 || index >= m_ruleList.count()) {
         return;
     }
     saveCurrentRule();
 
     m_editingIndex = index;
-    blockSignals(true);
-    KConfigGroup cfgGroup = rulesConfigGroup(index);
-    m_rulesModel->readFromConfig(&cfgGroup);
-    blockSignals(false);
+    m_rulesModel->importFromRules(m_ruleList.at(m_editingIndex));
 
     emit editingIndexChanged();
 
-    pushRulesEditor();
+    // Show and move to Rules Editor page
+    if (depth() < 2) {
+        push(QStringLiteral("RulesEditor.qml"));
+    }
+    setCurrentIndex(1);
+}
+
+void KCMKWinRules::newRule()
+{
+
+    m_ruleList.append(new Rules());
+    updateState();
+
+    const int newIndex = m_ruleList.count() - 1;
+    editRule(newIndex);
+
+    saveCurrentRule();
 }
 
 void KCMKWinRules::removeRule(int index)
 {
-    const int lastIndex = m_rulesListModel.count() - 1;
+    const int lastIndex = m_ruleList.count() - 1;
     if (index < 0 || index > lastIndex) {
         return;
     }
-
-    saveCurrentRule();
 
     if (m_editingIndex == index) {
         m_editingIndex = -1;
         pop();
     }
 
-    // First move the deleted group to the end, so the other rules get rearranged
-    moveConfigGroup(index, lastIndex);
-    rulesConfigGroup(lastIndex).deleteGroup();
-
-    m_rulesListModel.removeAt(index);
+    m_ruleList.removeAt(index);
 
     updateState();
 }
 
 void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
 {
-    const int lastIndex = m_rulesListModel.count() - 1;
+    const int lastIndex = m_ruleList.count() - 1;
     if (sourceIndex == destIndex
             || (sourceIndex < 0 || sourceIndex > lastIndex)
             || (destIndex < 0 || destIndex > lastIndex)) {
         return;
     }
 
-    saveCurrentRule();
+    m_ruleList.move(sourceIndex, destIndex);
 
-    moveConfigGroup(sourceIndex, destIndex);
-    m_rulesListModel.move(sourceIndex, destIndex);
+    if (m_editingIndex == sourceIndex) {
+        m_editingIndex = destIndex;
+        emit editingIndexChanged();
+    } else if (m_editingIndex > sourceIndex && m_editingIndex <= destIndex) {
+        m_editingIndex -= 1;
+        emit editingIndexChanged();
+    } else if (m_editingIndex < sourceIndex && m_editingIndex >= destIndex) {
+        m_editingIndex += 1;
+        emit editingIndexChanged();
+    }
 
-    updateState();
+    emit ruleBookModelChanged();
 }
 
 void KCMKWinRules::exportRule(int index)
 {
-    Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
+    Q_ASSERT(index >= 0 && index < m_ruleList.count());
 
     saveCurrentRule();
 
-    const QString description = m_rulesListModel.at(index);
+    const QString description = m_ruleList.at(index)->description;
     const QString defaultPath = QDir(QDir::home()).filePath(description + QStringLiteral(".kwinrule"));
     const QString path = QFileDialog::getSaveFileName(nullptr, i18n("Export Rules"), defaultPath,
                                                       i18n("KWin Rules (*.kwinrule)"));
     if (path.isEmpty())
         return;
 
-    KConfig config(path, KConfig::SimpleConfig);
-    KConfigGroup exportGroup(&config, description);
-    exportGroup.deleteGroup();
+    const auto config = KSharedConfig::openConfig(path, KConfig::SimpleConfig);
+    RuleSettings settings(config, m_ruleList.at(index)->description);
 
-    rulesConfigGroup(index).copyTo(&exportGroup);
-    config.sync();
+    settings.setDefaults();
+    m_ruleList.at(index)->write(&settings);
+    settings.save();
 }
 
 void KCMKWinRules::importRules()
@@ -270,26 +251,25 @@ void KCMKWinRules::importRules()
         return;
     }
 
-    KConfig config(path, KConfig::SimpleConfig);
-    const QStringList groups = config.groupList();
+    const auto config = KSharedConfig::openConfig(path, KConfig::SimpleConfig);
+    const QStringList groups = config->groupList();
     if (groups.isEmpty()) {
         return;
     }
 
     for (const QString &groupName : groups) {
-        KConfigGroup importGroup(&config, groupName);
+        RuleSettings settings(config, groupName);
 
-        const bool remove = importGroup.readEntry("DeleteRule", false);
-        const QString importDescription = importGroup.readEntry("Description", QString());
+        const bool remove = settings.deleteRule();
+        const QString importDescription = settings.description();
         if (importDescription.isEmpty()) {
             continue;
         }
 
-        // By default, set the new index at the end of the list
-        int newIndex = m_rulesListModel.count();
         // Try to find a rule with the same description to replace
-        for (int index = 0; index < m_rulesListModel.count(); index++) {
-            if (m_rulesListModel.at(index) == importDescription) {
+        int newIndex = -2;
+        for (int index = 0; index < m_ruleList.count(); index++) {
+            if (m_ruleList.at(index)->description == importDescription) {
                 newIndex = index;
                 break;
             }
@@ -300,71 +280,23 @@ void KCMKWinRules::importRules()
             continue;
         }
 
-        KConfigGroup newGroup = rulesConfigGroup(newIndex);
-        newGroup.deleteGroup();
-        importGroup.copyTo(&newGroup);
+        Rules *newRule = new Rules(&settings);
 
-        if (newIndex == m_rulesListModel.count()) {
-            m_rulesListModel.append(importDescription);
+        if (newIndex < 0) {
+            m_ruleList.append(newRule);
+        } else {
+            delete m_ruleList[newIndex];
+            m_ruleList[newIndex] = newRule;
         }
 
         // Reset rule editor if the current rule changed when importing
         if (m_editingIndex == newIndex) {
-            m_rulesModel->readFromConfig(&newGroup);
+            m_rulesModel->importFromRules(m_ruleList.at(m_editingIndex));
         }
     }
 
     updateState();
 }
-
-void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
-{
-    if (sourceIndex == destIndex) {
-        return;
-    }
-
-    KConfigGroup auxGroup = KConfigGroup(m_rulesConfig, QStringLiteral("auxiliar"));
-    KConfigGroup fromGroup;
-    KConfigGroup toGroup = rulesConfigGroup(sourceIndex);
-
-    // Save source into auxiliar group
-    toGroup.copyTo(&auxGroup);
-
-    // Slide all of the config groups between sourceIndex and destIndex
-    const int moveDir = (sourceIndex < destIndex) ? 1 : -1;
-    for (int index = sourceIndex; index != destIndex; index += moveDir)
-    {
-        fromGroup = rulesConfigGroup(index + moveDir);
-        toGroup.deleteGroup();  // delete group before copying to avoid old properties
-        fromGroup.copyTo(&toGroup);
-        toGroup = fromGroup;
-    }
-
-    // Save auxliar into destination group
-    toGroup.deleteGroup();
-    auxGroup.copyTo(&toGroup);
-    auxGroup.deleteGroup();
-
-    // Update current index
-    if (m_editingIndex == sourceIndex) {
-        m_editingIndex = destIndex;
-    } else if (m_editingIndex > sourceIndex && m_editingIndex <= destIndex) {
-        m_editingIndex -= 1;
-    } else if (m_editingIndex < sourceIndex && m_editingIndex >= destIndex) {
-        m_editingIndex += 1;
-    }
-}
-
-KConfigGroup KCMKWinRules::rulesConfigGroup(int index) const
-{
-    const QString groupName = QString::number(index + 1);
-    if (!m_rulesConfig->hasGroup(groupName)) {
-        KConfigGroup newGroup = KConfigGroup(m_rulesConfig, groupName);
-        return newGroup;
-    }
-    return m_rulesConfig->group(groupName);
-}
-
 
 K_PLUGIN_CLASS_WITH_JSON(KCMKWinRules, "kcm_kwinrules_qml.json");
 

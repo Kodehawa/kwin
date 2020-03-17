@@ -38,14 +38,14 @@ ScrollViewKCM {
     ConfigModule.buttons: ConfigModule.Apply
 
     view: ListView {
-        id: rulesListView
+        id: ruleBookView
         clip: true
         focus: true
 
-        model: kcm.rulesListModel
+        model: kcm.ruleBookModel
         delegate: Kirigami.DelegateRecycler {
-            width: rulesListView.width
-            sourceComponent: rulesListDelegate
+            width: ruleBookView.width
+            sourceComponent: ruleBookDelegate
         }
         currentIndex: kcm.editingIndex
 
@@ -63,7 +63,7 @@ ScrollViewKCM {
                 onDropIndexChanged: {
                     if (dropIndex >= 0) {
                         // TODO: After Qt 5.13 we can use ListView.itemAtIndex(index)
-                        var dropItem = rulesListView.contentItem.children[dropIndex];
+                        var dropItem = ruleBookView.contentItem.children[dropIndex];
                         dropIndicator.y = (dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height;
                     }
                 }
@@ -91,9 +91,9 @@ ScrollViewKCM {
     }
 
     Component {
-        id: rulesListDelegate
+        id: ruleBookDelegate
         Kirigami.AbstractListItem {
-            id: rulesListItem
+            id: ruleBookItem
 
             highlighted: kcm.editIndex == index
             onClicked: {
@@ -104,8 +104,8 @@ ScrollViewKCM {
                 //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
                 //FIXME: Improve visuals and behavior when dragging on the list.
                 Kirigami.ListItemDragHandle {
-                    listItem: rulesListItem
-                    listView: rulesListView
+                    listItem: ruleBookItem
+                    listView: ruleBookView
                     onMoveRequested: {
                         dragIndex = oldIndex;
                         dropIndex = newIndex;
@@ -127,7 +127,7 @@ ScrollViewKCM {
                     Layout.fillWidth: true
                     alignment: Qt.AlignRight
                     display: QQC2.Button.IconOnly
-                    opacity: rulesListItem.hovered ? 1 : 0
+                    opacity: ruleBookItem.hovered ? 1 : 0
                     focus: false
 
                     actions: [
