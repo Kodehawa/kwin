@@ -218,24 +218,25 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleItem::Type type)
 {
     switch (type) {
         case Undefined:
+        case Option:
             return value;
         case Boolean:
             return value.toBool();
-        case String:
-            return value.toString();
         case Integer:
-            return value.toInt();
-        case Option:
-            return value;
-        case FlagsOption:
-            return value.toUInt();
         case Percentage:
-            return value.toUInt();
+            return value.toInt();
+        case FlagsOption:
+            // HACK: Currently, the only user of this is "types" property
+            if (value.toInt() == -1) { //NET:AllTypesMask
+                return 0x3FF - 0x040;  //All possible flags minus NET::Override (deprecated)
+            }
+            return value.toInt();
         case Coordinate:
             if (value.toString().isEmpty()) {
                 return QStringLiteral("0,0");
             }
             return value.toString();
+        case String:
         case Shortcut:
             return value.toString();
     }

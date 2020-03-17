@@ -22,6 +22,7 @@
 #define KWIN_RULES_MODEL_H
 
 #include "ruleitem.h"
+#include "rulesettings.h"
 #include <rules.h>
 
 #include <QAbstractListModel>
@@ -31,8 +32,6 @@
 #ifdef KWIN_BUILD_ACTIVITIES
 #include <KActivities/Consumer>
 #endif
-
-#include <KConfig>
 
 
 namespace KWin
@@ -46,7 +45,6 @@ class RulesModel : public QAbstractListModel
 
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
-    //TODO: Export type RulesFilterModel
     Q_PROPERTY(RulesFilterModel *filter MEMBER m_filterModel CONSTANT)
 
 public:
@@ -78,13 +76,13 @@ public:
     bool hasRule(const QString &key) const;
     RuleItem *ruleItem(const QString &key) const;
 
-    void readFromConfig(KConfigGroup *config);
-    void writeToConfig(KConfigGroup *config) const;
-    void prefillProperties(const QVariantMap &info);
+    void readFromSettings(RuleSettings *settings);
+    void writeToSettings(RuleSettings *settings) const;
 
-    void initRules();
     void importFromRules(Rules *rules);
     Rules *exportToRules() const;
+
+    void prefillProperties(const QVariantMap &info);
 
     QString description() const;
     bool isWarningShown() const;

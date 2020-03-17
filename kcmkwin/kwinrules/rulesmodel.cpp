@@ -29,6 +29,7 @@
 #include <QtDBus>
 
 #include <KColorSchemeManager>
+#include <KConfig>
 #include <KLocalizedString>
 #include <KWindowSystem>
 
@@ -178,7 +179,7 @@ RuleItem *RulesModel::ruleItem(const QString& key) const
 
 QString RulesModel::description() const
 {
-    const QString desc = m_rules["Description"]->value().toString();
+    const QString desc = m_rules["description"]->value().toString();
     if (!desc.isEmpty()) {
         return desc;
     }
@@ -206,41 +207,35 @@ bool RulesModel::isWarningShown() const
                                 || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
     const bool alltypes = !m_rules["types"]->isEnabled()
                               || (m_rules["types"]->value() == 0)
+                              || (m_rules["types"]->value() == NET::AllTypesMask)
                               || ((m_rules["types"]->value().toInt() | (1 << NET::Override)) == 0x3FF);
 
     return (no_wmclass && alltypes);
 }
 
 
-void RulesModel::initRules()
-{
-    beginResetModel();
-    for (RuleItem *rule : qAsConst(m_ruleList)) {
-        rule->reset();
-    }
-    endResetModel();
-
-    emit descriptionChanged();
-    emit showWarningChanged();
-}
-
-void RulesModel::readFromConfig(KConfigGroup *config)
+void RulesModel::readFromSettings(RuleSettings *settings)
 {
     beginResetModel();
 
     for (RuleItem *rule : qAsConst(m_ruleList)) {
-        if (!config->hasKey(rule->key())) {
+        const KConfigSkeletonItem *configItem = settings->findItem(rule->key());
+        const KConfigSkeletonItem *configPolicyItem = settings->findItem(rule->policyKey());
+
+        if (!configItem
+                || (configPolicyItem && configPolicyItem->property() == Rules::Unused)
+                || (configItem->property().toString().isEmpty())) {
             rule->reset();
             continue;
         }
 
         rule->setEnabled(true);
 
-        const QVariant value = config->readEntry(rule->key());
+        const QVariant value = configItem->property();
         rule->setValue(value);
 
         if (rule->policyType() != RulePolicy::NoPolicy) {
-            const int policy = config->readEntry(rule->policyKey(), int());
+            const int policy = configPolicyItem->property().toInt();
             rule->setPolicy(policy);
         }
     }
@@ -251,99 +246,51 @@ void RulesModel::readFromConfig(KConfigGroup *config)
     emit showWarningChanged();
 }
 
-void RulesModel::writeToConfig(KConfigGroup *config) const
+void RulesModel::writeToSettings(RuleSettings *settings) const
 {
-    const QString description = m_rules["Description"]->value().toString();
+    const QString description = m_rules["description"]->value().toString();
     if (description.isEmpty()) {
-        m_rules["Description"]->setValue(defaultDescription());
+        m_rules["description"]->setValue(defaultDescription());
     }
 
     for (const RuleItem *rule : qAsConst(m_ruleList)) {
-        const bool ruleHasPolicy = rule->policyType() != RulePolicy::NoPolicy;
+        KConfigSkeletonItem *configItem = settings->findItem(rule->key());
+        KConfigSkeletonItem *configPolicyItem = settings->findItem(rule->policyKey());
 
-        //TODO: Add condition `&& rule->policy() > 0` to match the classic RuleWidget behavior?
+        Q_ASSERT (configItem);
+
         if (rule->isEnabled()) {
-            config->writeEntry(rule->key(), rule->value(), KConfig::Persistent);
-            if (ruleHasPolicy) {
-                config->writeEntry(rule->policyKey(), rule->policy(), KConfig::Persistent);
+            configItem->setProperty(rule->value());
+            if (configPolicyItem) {
+                configPolicyItem->setProperty(rule->policy());
             }
         } else {
-            config->deleteEntry(rule->key(), KConfig::Persistent);
-            if (ruleHasPolicy) {
-                config->deleteEntry(rule->policyKey(), KConfig::Persistent);
+            if (configPolicyItem) {
+                configPolicyItem->setProperty(Rules::Unused);
+            } else {
+                // Rules without policy gets deactivated by an empty string
+                configItem->setProperty(QString());
             }
         }
     }
-}
-
-void RulesModel::prefillProperties(const QVariantMap &info)
-{
-    beginResetModel();
-
-    // Properties that cannot be directly applied via x11PropertyHash
-    const QString position = QStringLiteral("%1,%2").arg(info.value("x").toInt())
-                                                    .arg(info.value("y").toInt());
-    const QString size = QStringLiteral("%1,%2").arg(info.value("width").toInt())
-                                                .arg(info.value("height").toInt());
-
-    if (!m_rules["position"]->isEnabled()) {
-        m_rules["position"]->setValue(position);
-    }
-    if (!m_rules["size"]->isEnabled()) {
-        m_rules["size"]->setValue(size);
-    }
-    if (!m_rules["minsize"]->isEnabled()) {
-        m_rules["minsize"]->setValue(size);
-    }
-    if (!m_rules["maxsize"]->isEnabled()) {
-        m_rules["maxsize"]->setValue(size);
-    }
-
-    NET::WindowType window_type = static_cast<NET::WindowType>(info.value("type", 0).toInt());
-    if (!m_rules["types"]->isEnabled() || m_rules["types"]->value() == 0) {
-        if (window_type == NET::Unknown) {
-            window_type = NET::Normal;
-        }
-        m_rules["types"]->setValue(1 << window_type);
-    }
-
-    const auto ruleForProperty = x11PropertyHash();
-    for (QString &property : info.keys()) {
-        if (!ruleForProperty.contains(property)) {
-            continue;
-        }
-        const QString ruleKey = ruleForProperty.value(property, QString());
-        Q_ASSERT(hasRule(ruleKey));
-
-        // Only prefill disabled or empty properties
-        if (!m_rules[ruleKey]->isEnabled() || m_rules[ruleKey]->value().toString().isEmpty()) {
-            m_rules[ruleKey]->setValue(info.value(property));
-        }
-    }
-
-    endResetModel();
-
-    emit descriptionChanged();
-    emit showWarningChanged();
 }
 
 void RulesModel::importFromRules(Rules* rules)
 {
-    if (rules == nullptr) {
-        initRules();
-        return;
-    }
-
     QTemporaryFile tempFile;
     if (!tempFile.open()) {
         return;
     }
-    const QString tempPath = tempFile.fileName();
-    KConfig config(tempPath, KConfig::SimpleConfig);
-    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
+    const auto cfg = KSharedConfig::openConfig(tempFile.fileName(), KConfig::SimpleConfig);
+    RuleSettings *settings = new RuleSettings(cfg, QStringLiteral("tempSettings"));
 
-    rules->write(cfg);
-    readFromConfig(&cfg);
+    settings->setDefaults();
+    if (rules) {
+        rules->write(settings);
+    }
+    readFromSettings(settings);
+
+    delete(settings);
 }
 
 Rules *RulesModel::exportToRules() const
@@ -352,13 +299,14 @@ Rules *RulesModel::exportToRules() const
     if (!tempFile.open()) {
         return nullptr;
     }
-    const QString tempPath = tempFile.fileName();
-    KConfig config(tempPath, KConfig::SimpleConfig);
-    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
+    const auto cfg = KSharedConfig::openConfig(tempFile.fileName(), KConfig::SimpleConfig);
 
-    writeToConfig(&cfg);
+    RuleSettings *settings = new RuleSettings(cfg, QStringLiteral("tempSettings"));
 
-    Rules *rules = new Rules(cfg);
+    writeToSettings(settings);
+    Rules *rules = new Rules(settings);
+
+    delete(settings);
     return rules;
 }
 
@@ -368,11 +316,11 @@ void RulesModel::populateRuleList()
     m_ruleList.clear();
 
     //Rule description
-    addRule(new RuleItem(QLatin1String("Description"),
+    addRule(new RuleItem(QLatin1String("description"),
                          RulePolicy::NoPolicy, RuleItem::String,
                          i18n("Description"), i18n("Window matching"),
                          QStringLiteral("entry-edit")));
-    m_rules["Description"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsDescription);
+    m_rules["description"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsDescription);
 
     // Window matching
     addRule(new RuleItem(QLatin1String("wmclass"),
@@ -387,17 +335,17 @@ void RulesModel::populateRuleList()
                          QStringLiteral("window")));
     m_rules["wmclasscomplete"]->setFlags(RuleItem::AlwaysEnabled);
 
-    addRule(new RuleItem(QLatin1String("windowrole"),
-                         RulePolicy::NoPolicy, RuleItem::String,
-                         i18n("Window role"), i18n("Window matching"),
-                         QStringLiteral("dialog-object-properties")));
-
     addRule(new RuleItem(QLatin1String("types"),
                          RulePolicy::NoPolicy, RuleItem::FlagsOption,
                          i18n("Window types"), i18n("Window matching"),
                          QStringLiteral("window-duplicate"),
                          windowTypesModelData()));
-    m_rules["types"]->setFlags(RuleItem::StartEnabled | RuleItem::AffectsWarning );
+    m_rules["types"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsWarning );
+
+    addRule(new RuleItem(QLatin1String("windowrole"),
+                         RulePolicy::NoPolicy, RuleItem::String,
+                         i18n("Window role"), i18n("Window matching"),
+                         QStringLiteral("dialog-object-properties")));
 
     addRule(new RuleItem(QLatin1String("title"),
                          RulePolicy::StringMatch, RuleItem::String,
@@ -628,8 +576,6 @@ void RulesModel::populateRuleList()
                          RulePolicy::ForceRule, RuleItem::Boolean,
                          i18n("Block compositing"), i18n("Appearance & Fixes"),
                          QStringLiteral("composite-track-on")));
-
-    initRules();
 }
 
 
@@ -661,6 +607,58 @@ const QHash<QString, QString> RulesModel::x11PropertyHash()
     };
     return propertyToRule;
 };
+
+void RulesModel::prefillProperties(const QVariantMap &info)
+{
+    beginResetModel();
+
+    // Properties that cannot be directly applied via x11PropertyHash
+    const QString position = QStringLiteral("%1,%2").arg(info.value("x").toInt())
+    .arg(info.value("y").toInt());
+    const QString size = QStringLiteral("%1,%2").arg(info.value("width").toInt())
+    .arg(info.value("height").toInt());
+
+    if (!m_rules["position"]->isEnabled()) {
+        m_rules["position"]->setValue(position);
+    }
+    if (!m_rules["size"]->isEnabled()) {
+        m_rules["size"]->setValue(size);
+    }
+    if (!m_rules["minsize"]->isEnabled()) {
+        m_rules["minsize"]->setValue(size);
+    }
+    if (!m_rules["maxsize"]->isEnabled()) {
+        m_rules["maxsize"]->setValue(size);
+    }
+
+    NET::WindowType window_type = static_cast<NET::WindowType>(info.value("type", 0).toInt());
+    if (!m_rules["types"]->isEnabled() || m_rules["types"]->value() == 0) {
+        if (window_type == NET::Unknown) {
+            window_type = NET::Normal;
+        }
+        m_rules["types"]->setValue(1 << window_type);
+    }
+
+    const auto ruleForProperty = x11PropertyHash();
+    for (QString &property : info.keys()) {
+        if (!ruleForProperty.contains(property)) {
+            continue;
+        }
+        const QString ruleKey = ruleForProperty.value(property, QString());
+        Q_ASSERT(hasRule(ruleKey));
+
+        // Only prefill disabled or empty properties
+        if (!m_rules[ruleKey]->isEnabled() || m_rules[ruleKey]->value().toString().isEmpty()) {
+            m_rules[ruleKey]->setValue(info.value(property));
+        }
+    }
+
+    endResetModel();
+
+    emit descriptionChanged();
+    emit showWarningChanged();
+}
+
 
 QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {
