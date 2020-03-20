@@ -73,7 +73,7 @@ private:
 
 private:
     RuleBookSettings *m_ruleBook;
-    QList<Rules *> m_ruleList;
+    QVector<Rules *> m_rules;
     RulesModel* m_rulesModel;
 
     int m_editingIndex = -1;

@@ -61,7 +61,7 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
 
     connect(m_rulesModel, &RulesModel::descriptionChanged, this, [this]{
         if (m_editingIndex >=0 && m_editingIndex < m_ruleBook->count()) {
-            m_ruleList.at(m_editingIndex)->description = m_rulesModel->description();
+            m_rules.at(m_editingIndex)->description = m_rulesModel->description();
             emit ruleBookModelChanged();
         }
     } );
@@ -76,7 +76,7 @@ KCMKWinRules::~KCMKWinRules() {
 QStringList KCMKWinRules::ruleBookModel() const
 {
     QStringList ruleDescriptionList;
-    for (const Rules *rule : qAsConst(m_ruleList)) {
+    for (const Rules *rule : qAsConst(m_rules)) {
         ruleDescriptionList.append(rule->description);
     }
     return ruleDescriptionList;
@@ -86,28 +86,27 @@ QStringList KCMKWinRules::ruleBookModel() const
 void KCMKWinRules::load()
 {
     m_ruleBook->load();
-    const auto rules = m_ruleBook->rules();
-    m_ruleList = QList<Rules *>::fromVector(rules);
+    m_rules = m_ruleBook->rules();
 
     setNeedsSave(false);
     emit ruleBookModelChanged();
 
     // Check if current index is no longer valid
-    if (m_editingIndex >= m_ruleList.count()) {
+    if (m_editingIndex >= m_rules.count()) {
         m_editingIndex = -1;
         pop();
         emit editingIndexChanged();
     }
     // Reset current index for rule editor
     if (m_editingIndex > 0) {
-        m_rulesModel->importFromRules(m_ruleList.at(m_editingIndex));
+        m_rulesModel->importFromRules(m_rules.at(m_editingIndex));
     }
 }
 
 void KCMKWinRules::save()
 {
     saveCurrentRule();
-    m_ruleBook->setRules(m_ruleList.toVector());
+    m_ruleBook->setRules(m_rules);
     m_ruleBook->save();
 
     QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
@@ -116,7 +115,7 @@ void KCMKWinRules::save()
 
 void KCMKWinRules::updateState()
 {
-    m_ruleBook->setCount(m_ruleList.count());
+    m_ruleBook->setCount(m_rules.count());
 
     emit editingIndexChanged();
     emit ruleBookModelChanged();
@@ -136,8 +135,8 @@ void KCMKWinRules::saveCurrentRule()
         return;
     }
     if (needsSave()) {
-        delete(m_ruleList[m_editingIndex]);
-        m_ruleList[m_editingIndex] = m_rulesModel->exportToRules();
+        delete(m_rules[m_editingIndex]);
+        m_rules[m_editingIndex] = m_rulesModel->exportToRules();
     }
 }
 
@@ -149,13 +148,13 @@ int KCMKWinRules::editingIndex() const
 
 void KCMKWinRules::editRule(int index)
 {
-    if (index < 0 || index >= m_ruleList.count()) {
+    if (index < 0 || index >= m_rules.count()) {
         return;
     }
     saveCurrentRule();
 
     m_editingIndex = index;
-    m_rulesModel->importFromRules(m_ruleList.at(m_editingIndex));
+    m_rulesModel->importFromRules(m_rules.at(m_editingIndex));
 
     emit editingIndexChanged();
 
@@ -169,10 +168,10 @@ void KCMKWinRules::editRule(int index)
 void KCMKWinRules::newRule()
 {
 
-    m_ruleList.append(new Rules());
+    m_rules.append(new Rules());
     updateState();
 
-    const int newIndex = m_ruleList.count() - 1;
+    const int newIndex = m_rules.count() - 1;
     editRule(newIndex);
 
     saveCurrentRule();
@@ -180,7 +179,7 @@ void KCMKWinRules::newRule()
 
 void KCMKWinRules::removeRule(int index)
 {
-    const int lastIndex = m_ruleList.count() - 1;
+    const int lastIndex = m_rules.count() - 1;
     if (index < 0 || index > lastIndex) {
         return;
     }
@@ -190,21 +189,21 @@ void KCMKWinRules::removeRule(int index)
         pop();
     }
 
-    m_ruleList.removeAt(index);
+    m_rules.removeAt(index);
 
     updateState();
 }
 
 void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
 {
-    const int lastIndex = m_ruleList.count() - 1;
+    const int lastIndex = m_rules.count() - 1;
     if (sourceIndex == destIndex
             || (sourceIndex < 0 || sourceIndex > lastIndex)
             || (destIndex < 0 || destIndex > lastIndex)) {
         return;
     }
 
-    m_ruleList.move(sourceIndex, destIndex);
+    m_rules.move(sourceIndex, destIndex);
 
     if (m_editingIndex == sourceIndex) {
         m_editingIndex = destIndex;
@@ -222,11 +221,11 @@ void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
 
 void KCMKWinRules::exportRule(int index)
 {
-    Q_ASSERT(index >= 0 && index < m_ruleList.count());
+    Q_ASSERT(index >= 0 && index < m_rules.count());
 
     saveCurrentRule();
 
-    const QString description = m_ruleList.at(index)->description;
+    const QString description = m_rules.at(index)->description;
     const QString defaultPath = QDir(QDir::home()).filePath(description + QStringLiteral(".kwinrule"));
     const QString path = QFileDialog::getSaveFileName(nullptr, i18n("Export Rules"), defaultPath,
                                                       i18n("KWin Rules (*.kwinrule)"));
@@ -234,10 +233,10 @@ void KCMKWinRules::exportRule(int index)
         return;
 
     const auto config = KSharedConfig::openConfig(path, KConfig::SimpleConfig);
-    RuleSettings settings(config, m_ruleList.at(index)->description);
+    RuleSettings settings(config, m_rules.at(index)->description);
 
     settings.setDefaults();
-    m_ruleList.at(index)->write(&settings);
+    m_rules.at(index)->write(&settings);
     settings.save();
 }
 
@@ -269,8 +268,8 @@ void KCMKWinRules::importRules()
 
         // Try to find a rule with the same description to replace
         int newIndex = -2;
-        for (int index = 0; index < m_ruleList.count(); index++) {
-            if (m_ruleList.at(index)->description == importDescription) {
+        for (int index = 0; index < m_rules.count(); index++) {
+            if (m_rules.at(index)->description == importDescription) {
                 newIndex = index;
                 break;
             }
@@ -284,15 +283,15 @@ void KCMKWinRules::importRules()
         Rules *newRule = new Rules(&settings);
 
         if (newIndex < 0) {
-            m_ruleList.append(newRule);
+            m_rules.append(newRule);
         } else {
-            delete m_ruleList[newIndex];
-            m_ruleList[newIndex] = newRule;
+            delete m_rules[newIndex];
+            m_rules[newIndex] = newRule;
         }
 
         // Reset rule editor if the current rule changed when importing
         if (m_editingIndex == newIndex) {
-            m_rulesModel->importFromRules(m_ruleList.at(m_editingIndex));
+            m_rulesModel->importFromRules(m_rules.at(m_editingIndex));
         }
     }
 
