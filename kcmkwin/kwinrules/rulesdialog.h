@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004 Lubos Lunak <l.lunak@kde.org>
- * Copyright (c) 2010 Ismael Asensio <isma.af@gmail.com>
+ * Copyright (c) 2020 Ismael Asensio <isma.af@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
