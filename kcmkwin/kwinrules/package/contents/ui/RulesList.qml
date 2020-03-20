@@ -40,7 +40,6 @@ ScrollViewKCM {
     view: ListView {
         id: ruleBookView
         clip: true
-        focus: true
 
         model: kcm.ruleBookModel
         delegate: Kirigami.DelegateRecycler {
@@ -85,7 +84,7 @@ ScrollViewKCM {
             Kirigami.Action {
                 text: i18n("New")
                 iconName: "list-add-symbolic"
-                onTriggered: kcm.newRule();
+                onTriggered: kcm.createRule();
             }
         ]
     }

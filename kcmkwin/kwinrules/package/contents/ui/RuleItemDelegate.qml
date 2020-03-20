@@ -25,14 +25,12 @@ import org.kde.kirigami 2.10 as Kirigami
 
 Kirigami.AbstractListItem {
     id: ruleDelegate
-    focus: true
 
-    property var ruleEnabled: model.enabled
+    property bool ruleEnabled: model.enabled
 
     Kirigami.Theme.colorSet: Kirigami.Theme.View
 
     RowLayout {
-        spacing: Kirigami.Units.smallSpacing
         anchors {
             left: parent.left
             right: parent.right
@@ -61,6 +59,7 @@ Kirigami.AbstractListItem {
         QQC2.Label {
             text: model.name
             Layout.minimumWidth: 12 * Kirigami.Units.gridUnit
+            elide: Text.ElideRight
         }
 
         Item {
@@ -80,7 +79,6 @@ Kirigami.AbstractListItem {
 
             model: policyModel
             onActivated: {
-                print ("Policy changed for rule " + key + ": " + currentValue);
                 policy = currentValue;
             }
         }
@@ -100,7 +98,6 @@ Kirigami.AbstractListItem {
             controlType: model.type
 
             onValueEdited: (value) => {
-                print ("Rule changed: " + model.key + " = " + value);
                 model.value = value;
             }
         }

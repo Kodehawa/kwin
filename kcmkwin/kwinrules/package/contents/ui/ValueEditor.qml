@@ -153,7 +153,6 @@ Loader {
             spacing: Kirigami.Units.smallSpacing
 
             property var coords: ruleValue ? ruleValue.split(',') : [0, 0]
-            //FIXME: QML RowLayout: Binding loop detected for property "coordWidth"
             property int coordWidth: (coordItem.width - coordSeparator.width) / 2 - coordItem.spacing
 
             QQC2.SpinBox {

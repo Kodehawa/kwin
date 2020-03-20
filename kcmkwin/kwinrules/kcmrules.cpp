@@ -69,7 +69,7 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
 }
 
 KCMKWinRules::~KCMKWinRules() {
-    delete m_ruleBook;
+    qDeleteAll(m_rules);
 }
 
 
@@ -165,7 +165,7 @@ void KCMKWinRules::editRule(int index)
     setCurrentIndex(1);
 }
 
-void KCMKWinRules::newRule()
+void KCMKWinRules::createRule()
 {
 
     m_rules.append(new Rules());
@@ -179,8 +179,7 @@ void KCMKWinRules::newRule()
 
 void KCMKWinRules::removeRule(int index)
 {
-    const int lastIndex = m_rules.count() - 1;
-    if (index < 0 || index > lastIndex) {
+    if (index < 0 || index >= m_rules.count()) {
         return;
     }
 
@@ -189,6 +188,7 @@ void KCMKWinRules::removeRule(int index)
         pop();
     }
 
+    delete(m_rules.at(index));
     m_rules.removeAt(index);
 
     updateState();

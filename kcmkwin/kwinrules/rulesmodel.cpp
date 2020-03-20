@@ -54,8 +54,6 @@ RulesModel::RulesModel(QObject *parent)
 
 RulesModel::~RulesModel()
 {
-    delete m_filterModel;
-    delete m_activities;
 }
 
 QHash< int, QByteArray > RulesModel::roleNames() const
@@ -87,7 +85,7 @@ int RulesModel::rowCount(const QModelIndex &parent) const
 
 QVariant RulesModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_ruleList.size())) {
+    if (!checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::ParentIsInvalid)) {
         return QVariant();
     }
 
@@ -126,7 +124,7 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
 
 bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_ruleList.size())) {
+    if (!checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::ParentIsInvalid)) {
         return false;
     }
 
@@ -134,12 +132,21 @@ bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int ro
 
     switch (role) {
     case EnabledRole:
+        if (value.toBool() == rule->isEnabled()) {
+            return true;
+        }
         rule->setEnabled(value.toBool());
         break;
     case ValueRole:
+        if (value == rule->value()) {
+            return true;
+        }
         rule->setValue(value);
         break;
     case PolicyRole:
+        if (value.toInt() == rule->policy()) {
+            return true;
+        }
         rule->setPolicy(value.toInt());
         break;
     default:
@@ -174,7 +181,7 @@ bool RulesModel::hasRule(const QString& key) const
 
 RuleItem *RulesModel::ruleItem(const QString& key) const
 {
-    return m_rules[key];
+    return m_rules.value(key);
 }
 
 QString RulesModel::description() const
@@ -313,6 +320,7 @@ Rules *RulesModel::exportToRules() const
 
 void RulesModel::populateRuleList()
 {
+    qDeleteAll(m_ruleList);
     m_ruleList.clear();
 
     //Rule description
@@ -758,11 +766,11 @@ QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
 
     // Skip row 0, which is Default scheme
     for (int r = 1; r < schemesModel->rowCount(); r++) {
-        QModelIndex index = schemesModel->index(r, 0);
+        const QModelIndex index = schemesModel->index(r, 0);
         modelData << OptionsModel::Data{
-            QFileInfo(schemesModel->data(index, Qt::UserRole).toString()).baseName(),
-            schemesModel->data(index, Qt::DisplayRole).toString(),
-            schemesModel->data(index, Qt::DecorationRole).value<QIcon>()
+            QFileInfo(index.data(Qt::UserRole).toString()).baseName(),
+            index.data(Qt::DisplayRole).toString(),
+            index.data(Qt::DecorationRole).value<QIcon>()
         };
     }
 
@@ -779,8 +787,7 @@ bool RulesFilterModel::filterAcceptsRow(int source_row, const QModelIndex &sourc
         return true;
     }
 
-    const QModelIndex index = sourceModel()->index(source_row, 0);
-    return sourceModel()->data(index, RulesModel::EnabledRole).toBool();
+    return sourceModel()->index(source_row, 0).data(RulesModel::EnabledRole).toBool();
 }
 
 void RulesFilterModel::setSearchText(const QString &text)
@@ -797,6 +804,10 @@ bool RulesFilterModel::showAll() const
 
 void RulesFilterModel::setShowAll(bool showAll)
 {
+    if (m_showAll == showAll) {
+        return;
+    }
+
     m_showAll = showAll;
     invalidateFilter();
     emit showAllChanged();

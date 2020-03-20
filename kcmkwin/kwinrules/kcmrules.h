@@ -42,23 +42,20 @@ class KCMKWinRules : public KQuickAddons::ConfigModule
 
 public:
     explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
-    ~KCMKWinRules();
+    ~KCMKWinRules() override;
+
+    Q_INVOKABLE void editRule(int index);
+
+    Q_INVOKABLE void createRule();
+    Q_INVOKABLE void removeRule(int index);
+    Q_INVOKABLE void moveRule(int sourceIndex, int destIndex);
+
+    Q_INVOKABLE void exportRule(int index);
+    Q_INVOKABLE void importRules();
 
 public slots:
     void load() override;
     void save() override;
-
-    QStringList ruleBookModel() const;
-
-    int editingIndex() const;
-    void editRule(int index);
-
-    void newRule();
-    void removeRule(int index);
-    void moveRule(int sourceIndex, int destIndex);
-
-    void exportRule(int index);
-    void importRules();
 
 signals:
     void ruleBookModelChanged();
@@ -69,6 +66,8 @@ private slots:
     void updateState();
 
 private:
+    QStringList ruleBookModel() const;
+    int editingIndex() const;
     void saveCurrentRule();
 
 private:

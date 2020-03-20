@@ -33,7 +33,7 @@ ScrollViewKCM {
 
     header: RowLayout {
         id: filterBar
-        Kirigami.ActionTextField {
+        Kirigami.SearchField {
             id: searchField
 
             Layout.fillWidth: true
@@ -43,27 +43,17 @@ ScrollViewKCM {
             onTextChanged: {
                 rulesModel.filter.searchText = text;
             }
-
-            rightActions: [
-                Kirigami.Action {
-                    iconName: "edit-clear"
-                    visible: searchField.text !== ""
-                    onTriggered: {
-                        searchField.text = ""
-                        searchField.accepted()
-                    }
-                }
-            ]
         }
         QQC2.ToolButton {
             id: showAllButton
             icon.name: checked ? 'view-visible' : 'view-hidden'
-            text: i18n("Show all rules")
+            text: i18n("Show All Rules")
             checkable: true
             enabled: searchField.text.trim() == ""
-            checked: rulesModel.filter.showAll
-            onToggled: {
-                rulesModel.filter.showAll = checked;
+            Binding {
+                target: rulesModel.filter
+                property: "showAll"
+                value: showAllButton.checked
             }
         }
     }
@@ -99,8 +89,8 @@ ScrollViewKCM {
             from: 0
             to: 30
             textFromValue: (value, locale) => {
-                return value == 0 ? i18n("instantly")
-                                  : i18np("after 1 second", "after %1 seconds", value)
+                return (value == 0) ? i18n("Instantly")
+                                    : i18np("After 1 second", "After %1 seconds", value)
             }
         }
 
@@ -113,10 +103,10 @@ ScrollViewKCM {
 
             visible: rulesModel.showWarning
             text: i18n("You have specified the window class as unimportant.\n" +
-                    "This means the settings will possibly apply to windows from all " +
-                    "applications. If you really want to create a generic setting, it is " +
-                    "recommended you at least limit the window types to avoid special window " +
-                    "types.")
+                       "This means the settings will possibly apply to windows from all " +
+                       "applications. If you really want to create a generic setting, it is " +
+                       "recommended you at least limit the window types to avoid special window " +
+                       "types.")
         }
     }
 }

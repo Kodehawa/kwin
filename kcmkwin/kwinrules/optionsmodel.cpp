@@ -47,7 +47,7 @@ int OptionsModel::rowCount(const QModelIndex &parent) const
 
 QVariant OptionsModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_data.size())) {
+    if (!checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::ParentIsInvalid)) {
         return QVariant();
     }
 
