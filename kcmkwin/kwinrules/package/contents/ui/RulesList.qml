@@ -94,11 +94,6 @@ ScrollViewKCM {
         Kirigami.AbstractListItem {
             id: ruleBookItem
 
-            highlighted: kcm.editIndex == index
-            onClicked: {
-                kcm.editRule(index);
-            }
-
             RowLayout {
                 //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
                 //FIXME: Improve visuals and behavior when dragging on the list.
@@ -130,6 +125,12 @@ ScrollViewKCM {
                     focus: false
 
                     actions: [
+                        Kirigami.Action {
+                            text: i18n("Edit")
+                            iconName: "edit-entry"
+                            onTriggered: kcm.editRule(index);
+                        }
+                        ,
                         Kirigami.Action {
                             text: i18n("Export")
                             iconName: "document-export"
