@@ -59,6 +59,7 @@ Kirigami.AbstractListItem {
         QQC2.Label {
             text: model.name
             Layout.minimumWidth: 12 * Kirigami.Units.gridUnit
+            horizontalAlignment: Text.AlignLeft
             elide: Text.ElideRight
         }
 

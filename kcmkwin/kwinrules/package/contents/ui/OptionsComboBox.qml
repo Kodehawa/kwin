@@ -43,8 +43,13 @@ QQC2.ComboBox {
     }
 
     delegate: QQC2.ItemDelegate {
+        readonly property bool reversed : Qt.application.layoutDirection === Qt.RightToLeft
+
         highlighted: optionsCombo.highlightedIndex == index
         width: parent.width
+
+        LayoutMirroring.enabled: reversed
+        LayoutMirroring.childrenInherit: true
 
         contentItem: RowLayout {
             Kirigami.Icon {
@@ -56,6 +61,7 @@ QQC2.ComboBox {
                 text: model.text
                 color: highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
                 Layout.fillWidth: true
+                horizontalAlignment: Text.AlignLeft
             }
         }
 

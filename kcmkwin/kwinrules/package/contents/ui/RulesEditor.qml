@@ -39,6 +39,7 @@ ScrollViewKCM {
             Layout.fillWidth: true
             placeholderText: i18n("Search...")
             focusSequence: "Ctrl+F"
+            horizontalAlignment: Text.AlignLeft
 
             onTextChanged: {
                 rulesModel.filter.searchText = text;

@@ -75,6 +75,7 @@ Loader {
         QQC2.TextField {
             property bool isTextEdited: false
             text: ruleValue
+            horizontalAlignment: Text.AlignLeft
             onTextEdited: { isTextEdited = true; }
             onEditingFinished: {
                 if (isTextEdited) { valueEditor.valueEdited(text); }
