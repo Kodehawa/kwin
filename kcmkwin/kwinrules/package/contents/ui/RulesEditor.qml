@@ -70,34 +70,38 @@ ScrollViewKCM {
         }
     }
 
-    // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
-    footer: GridLayout {
+    footer: ColumnLayout {
         id: kcmFooter
-        columns: 2
 
-        QQC2.Button {
-            Layout.fillWidth: true
-            text: i18n("Detect window properties")
-            icon.name: "edit-find"    // TODO: Better icon for "Detect window properties"
-            onClicked: {
-                rulesModel.detectWindowProperties(detection_delay.value);
+        RowLayout {
+            Item {
+                Layout.fillWidth: true
+            }
+
+            QQC2.Button {
+                text: i18n("Detect window properties")
+                icon.name: "edit-find"    // TODO: Better icon for "Detect window properties"
+                onClicked: {
+                    rulesModel.detectWindowProperties(detection_delay.value);
+                }
+            }
+
+            QQC2.SpinBox {
+                id: detection_delay
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 6
+                from: 0
+                to: 30
+                textFromValue: (value, locale) => {
+                    return (value == 0) ? i18n("Instantly")
+                                        : i18np("After 1 second", "After %1 seconds", value)
+                }
             }
         }
 
-        QQC2.SpinBox {
-            id: detection_delay
-            from: 0
-            to: 30
-            textFromValue: (value, locale) => {
-                return (value == 0) ? i18n("Instantly")
-                                    : i18np("After 1 second", "After %1 seconds", value)
-            }
-        }
-
+        // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
         Kirigami.InlineMessage {
             id: warningMessage
 
-            Layout.columnSpan: kcmFooter.columns
             Layout.fillWidth: true
             Layout.fillHeight: true
 
