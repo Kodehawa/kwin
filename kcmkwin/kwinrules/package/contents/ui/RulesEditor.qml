@@ -23,6 +23,8 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12 as QQC2
 import org.kde.kirigami 2.10 as Kirigami
 import org.kde.kcm 1.2
+import org.kde.kitemmodels 1.0
+import org.kde.kcms.kwinrules 1.0
 
 
 ScrollViewKCM {
@@ -40,10 +42,6 @@ ScrollViewKCM {
             placeholderText: i18n("Search...")
             focusSequence: "Ctrl+F"
             horizontalAlignment: Text.AlignLeft
-
-            onTextChanged: {
-                rulesModel.filter.searchText = text;
-            }
         }
         QQC2.ToolButton {
             id: showAllButton
@@ -51,11 +49,6 @@ ScrollViewKCM {
             text: i18n("Show All Rules")
             checkable: true
             enabled: searchField.text.trim() == ""
-            Binding {
-                target: rulesModel.filter
-                property: "showAll"
-                value: showAllButton.checked
-            }
         }
     }
 
@@ -63,7 +56,7 @@ ScrollViewKCM {
         id: rulesView
         clip: true
 
-        model: rulesModel.filter
+        model: filterModel
         delegate: RuleItemDelegate {}
         section {
             property: "section"
@@ -112,6 +105,34 @@ ScrollViewKCM {
                        "applications. If you really want to create a generic setting, it is " +
                        "recommended you at least limit the window types to avoid special window " +
                        "types.")
+        }
+    }
+
+    KSortFilterProxyModel {
+        id: filterModel
+        sourceModel: kcm.rulesModel
+
+        property bool showAll: showAllButton.checked
+        onShowAllChanged: {
+            invalidateFilter();
+        }
+
+        filterString: searchField.text.trim().toLowerCase()
+
+        filterRowCallback: (source_row, source_parent) => {
+            var index = sourceModel.index(source_row, 0, source_parent);
+            function itemData (role){
+                return sourceModel.data(index, role)
+            }
+
+            if (filterString != "") {
+                return (itemData(RulesModel.NameRole).toLowerCase().includes(filterString)
+                        || itemData(RulesModel.ValueRole).toString().toLowerCase().includes(filterString));
+            }
+            if (showAll) {
+                return true;
+            }
+            return itemData(RulesModel.EnabledRole)
         }
     }
 }

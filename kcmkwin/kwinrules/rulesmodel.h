@@ -37,15 +37,12 @@
 namespace KWin
 {
 
-class RulesFilterModel;
-
 class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
-    Q_PROPERTY(RulesFilterModel *filter MEMBER m_filterModel CONSTANT)
 
 public:
     enum RulesRole {
@@ -63,6 +60,7 @@ public:
         PolicyModelRole,
         OptionsModelRole
     };
+    Q_ENUM(RulesRole)
 
 public:
     explicit RulesModel(QObject *parent = nullptr);
@@ -114,36 +112,9 @@ private slots:
 private:
     QList<RuleItem *> m_ruleList;
     QHash<QString, RuleItem *> m_rules;
-    RulesFilterModel *m_filterModel;
 #ifdef KWIN_BUILD_ACTIVITIES
     KActivities::Consumer *m_activities;
 #endif
-};
-
-
-class RulesFilterModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-    Q_PROPERTY(bool showAll READ showAll WRITE setShowAll NOTIFY showAllChanged)
-    Q_PROPERTY(QString searchText READ searchText WRITE setSearchText NOTIFY searchTextChanged)
-
-public:
-    explicit RulesFilterModel(QObject *parent) : QSortFilterProxyModel(parent) {};
-    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
-
-    const QString searchText();
-    void setSearchText(const QString &text);
-
-    bool showAll() const;
-    void setShowAll(bool showAll);
-
-signals:
-    void searchTextChanged();
-    void showAllChanged();
-
-private:
-    QString m_searchText;
-    bool m_showAll = false;
 };
 
 }
