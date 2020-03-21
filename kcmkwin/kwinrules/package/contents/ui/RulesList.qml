@@ -73,6 +73,7 @@ ScrollViewKCM {
     footer: Kirigami.ActionToolBar {
         Layout.fillWidth: true
         alignment: Qt.AlignRight
+        flat: false
 
         actions: [
             Kirigami.Action {
