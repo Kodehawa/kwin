@@ -62,10 +62,15 @@ Loader {
             Item {
                 Layout.fillWidth: true
             }
-            QQC2.Switch {
-                text: checked ? i18n("Yes") : i18n("No")
+            QQC2.RadioButton {
+                text: i18n("Yes")
                 checked: ruleValue
                 onToggled: valueEditor.valueEdited(checked)
+            }
+            QQC2.RadioButton {
+                text: i18n("No")
+                checked: !ruleValue
+                onToggled: valueEditor.valueEdited(!checked)
             }
         }
     }
