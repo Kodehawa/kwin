@@ -125,21 +125,24 @@ class RulesFilterModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     Q_PROPERTY(bool showAll READ showAll WRITE setShowAll NOTIFY showAllChanged)
-    Q_PROPERTY(QString searchText WRITE setSearchText)
+    Q_PROPERTY(QString searchText READ searchText WRITE setSearchText NOTIFY searchTextChanged)
 
 public:
     explicit RulesFilterModel(QObject *parent) : QSortFilterProxyModel(parent) {};
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
 
+    const QString searchText();
     void setSearchText(const QString &text);
+
     bool showAll() const;
     void setShowAll(bool showAll);
 
 signals:
+    void searchTextChanged();
     void showAllChanged();
 
 private:
-    bool m_isSearching = false;
+    QString m_searchText;
     bool m_showAll = false;
 };
 

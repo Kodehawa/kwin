@@ -780,21 +780,35 @@ QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
 
 bool RulesFilterModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
-    if (m_isSearching) {
-        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    Q_UNUSED(source_parent)
+
+    const QModelIndex index = sourceModel()->index(source_row, 0);
+
+    if (!m_searchText.isEmpty()) {
+        return (index.data(RulesModel::NameRole).toString().toLower().contains(m_searchText)
+                || index.data(RulesModel::ValueRole).toString().toLower().contains(m_searchText));
     }
     if (m_showAll) {
         return true;
     }
 
-    return sourceModel()->index(source_row, 0).data(RulesModel::EnabledRole).toBool();
+    return index.data(RulesModel::EnabledRole).toBool();
+}
+
+const QString RulesFilterModel::searchText()
+{
+    return m_searchText;
 }
 
 void RulesFilterModel::setSearchText(const QString &text)
 {
-    const QString searchText = text.trimmed();
-    m_isSearching = !searchText.isEmpty();
-    setFilterFixedString(searchText);
+    const QString searchText = text.trimmed().toLower();
+    if (m_searchText == searchText) {
+        return;
+    }
+    m_searchText = searchText;
+    invalidateFilter();
+    emit searchTextChanged();
 }
 
 bool RulesFilterModel::showAll() const
