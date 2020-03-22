@@ -21,7 +21,6 @@
 
 #include "kcmrules.h"
 
-#include <QFileDialog>
 #include <QtDBus>
 
 #include <KAboutData>
@@ -221,20 +220,13 @@ void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
     updateNeedsSave();
 }
 
-void KCMKWinRules::exportRule(int index)
+void KCMKWinRules::exportToFile(const QUrl &path, int index)
 {
     Q_ASSERT(index >= 0 && index < m_rules.count());
 
     saveCurrentRule();
 
-    const QString description = m_rules.at(index)->description;
-    const QString defaultPath = QDir(QDir::home()).filePath(description + QStringLiteral(".kwinrule"));
-    const QString path = QFileDialog::getSaveFileName(nullptr, i18n("Export Rules"), defaultPath,
-                                                      i18n("KWin Rules (*.kwinrule)"));
-    if (path.isEmpty())
-        return;
-
-    const auto config = KSharedConfig::openConfig(path, KConfig::SimpleConfig);
+    const auto config = KSharedConfig::openConfig(path.toLocalFile(), KConfig::SimpleConfig);
     RuleSettings settings(config, m_rules.at(index)->description);
 
     settings.setDefaults();
@@ -242,18 +234,9 @@ void KCMKWinRules::exportRule(int index)
     settings.save();
 }
 
-void KCMKWinRules::importRules()
+void KCMKWinRules::importFromFile(const QUrl &path)
 {
-    QString path = QFileDialog::getOpenFileName(nullptr,
-                                                i18n("Import Rules"),
-                                                QDir::home().absolutePath(),
-                                                i18n("KWin Rules (*.kwinrule)"));
-
-    if (path.isEmpty()) {
-        return;
-    }
-
-    const auto config = KSharedConfig::openConfig(path, KConfig::SimpleConfig);
+    const auto config = KSharedConfig::openConfig(path.toLocalFile(), KConfig::SimpleConfig);
     const QStringList groups = config->groupList();
     if (groups.isEmpty()) {
         return;

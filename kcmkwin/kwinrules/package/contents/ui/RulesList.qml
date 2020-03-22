@@ -78,13 +78,17 @@ ScrollViewKCM {
             Kirigami.Action {
                 text: i18n("Import")
                 iconName: "document-import"
-                onTriggered: kcm.importRules();
+                onTriggered: {
+                    importDialog.active = true;
+                }
             }
             ,
             Kirigami.Action {
                 text: i18n("New")
                 iconName: "list-add-symbolic"
-                onTriggered: kcm.createRule();
+                onTriggered: {
+                    kcm.createRule();
+                }
             }
         ]
     }
@@ -128,23 +132,55 @@ ScrollViewKCM {
                         Kirigami.Action {
                             text: i18n("Edit")
                             iconName: "edit-entry"
-                            onTriggered: kcm.editRule(index);
+                            onTriggered: {
+                                kcm.editRule(index);
+                            }
                         }
                         ,
                         Kirigami.Action {
                             text: i18n("Export")
                             iconName: "document-export"
-                            onTriggered: kcm.exportRule(index);
+                            onTriggered: {
+                                exportDialog.index = index;
+                                exportDialog.active = true;
+                            }
                         }
                         ,
                         Kirigami.Action {
                             text: i18n("Delete")
                             iconName: "entry-delete"
-                            onTriggered: kcm.removeRule(index);
+                            onTriggered: {
+                                kcm.removeRule(index);
+                            }
                         }
                     ]
                 }
             }
+        }
+    }
+
+    FileDialogLoader {
+        id: importDialog
+        title: i18n("Import Rules")
+        isSaveDialog: false
+        onLastFolderChanged: {
+            exportDialog.lastFolder = lastFolder;
+        }
+        onFileSelected: {
+            kcm.importFromFile(path);
+        }
+    }
+
+    FileDialogLoader {
+        id: exportDialog
+        property int index : 0
+        title: i18n("Export Rules")
+        isSaveDialog: true
+        onLastFolderChanged: {
+            importDialog.lastFolder = lastFolder;
+        }
+        onFileSelected: {
+            kcm.exportToFile(path, index);
         }
     }
 }

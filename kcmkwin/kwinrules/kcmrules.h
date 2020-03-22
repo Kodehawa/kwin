@@ -50,8 +50,8 @@ public:
     Q_INVOKABLE void removeRule(int index);
     Q_INVOKABLE void moveRule(int sourceIndex, int destIndex);
 
-    Q_INVOKABLE void exportRule(int index);
-    Q_INVOKABLE void importRules();
+    Q_INVOKABLE void exportToFile(const QUrl &path, int index);
+    Q_INVOKABLE void importFromFile(const QUrl &path);
 
 public slots:
     void load() override;
