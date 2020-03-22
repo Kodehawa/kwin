@@ -217,6 +217,8 @@ void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
     }
 
     emit ruleBookModelChanged();
+
+    updateNeedsSave();
 }
 
 void KCMKWinRules::exportRule(int index)
