@@ -21,7 +21,8 @@
 
 #include "kcmrules.h"
 
-#include <QtDBus>
+#include <QDBusConnection>
+#include <QDBusMessage>
 
 #include <KAboutData>
 #include <KConfig>
@@ -108,6 +109,7 @@ void KCMKWinRules::save()
     m_ruleBook->setRules(m_rules);
     m_ruleBook->save();
 
+    // Notify kwin to reload configuration
     QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
     QDBusConnection::sessionBus().send(message);
 }
