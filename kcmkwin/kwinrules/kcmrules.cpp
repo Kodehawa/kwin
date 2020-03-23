@@ -30,11 +30,6 @@
 #include <KPluginFactory>
 
 
-namespace
-{
-    const QString s_configFile { QLatin1String("kwinrulesrc") };
-}
-
 namespace KWin
 {
 
