@@ -38,7 +38,7 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
     , m_ruleBook(new RuleBookSettings(this))
     , m_rulesModel(new RulesModel(this))
 {
-    auto about = new KAboutData(QStringLiteral("kcm_kwinrules_qml"),
+    auto about = new KAboutData(QStringLiteral("kcm_kwinrules"),
                                 i18n("Window Rules"),
                                 QStringLiteral("1.0"),
                                 QString(),
@@ -280,7 +280,7 @@ void KCMKWinRules::importFromFile(const QUrl &path)
     updateState();
 }
 
-K_PLUGIN_CLASS_WITH_JSON(KCMKWinRules, "kcm_kwinrules_qml.json");
+K_PLUGIN_CLASS_WITH_JSON(KCMKWinRules, "kcm_kwinrules.json");
 
 } // namespace
 
