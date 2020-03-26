@@ -37,10 +37,7 @@ ScrollViewKCM {
         id: filterBar
         Kirigami.SearchField {
             id: searchField
-
             Layout.fillWidth: true
-            placeholderText: i18n("Search...")
-            focusSequence: "Ctrl+F"
             horizontalAlignment: Text.AlignLeft
         }
         QQC2.ToolButton {
