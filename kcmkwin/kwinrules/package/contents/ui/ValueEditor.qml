@@ -111,25 +111,13 @@ Loader {
 
     Component {
         id: flagsEditor
-        RowLayout {
-            Layout.minimumWidth: 10 * Kirigami.Units.gridUnit
-            Layout.alignment: Qt.AlignRight;
-            spacing: 0
-            Repeater {
-                id: flagsRepeater
-                model: ruleOptions
-
-                QQC2.ToolButton {
-                    property int bit: model.value
-                    icon.name: model.iconName
-                    checkable: true
-                    checked: (ruleValue & (1 << bit)) == (1 << bit)
-                    QQC2.ToolTip.text: model.text
-                    QQC2.ToolTip.visible: hovered
-                    onToggled: {
-                        valueEditor.valueEdited((ruleValue & ~(1 << bit)) | (checked << bit));
-                    }
-                }
+        OptionsComboBox {
+            flat: true
+            model: ruleOptions
+            multipleChoice: true
+            selectionMask: ruleValue
+            onActivated: {
+                valueEditor.valueEdited(selectionMask);
             }
         }
     }

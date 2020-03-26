@@ -32,14 +32,27 @@ QQC2.ComboBox {
     //FIXME: After Qt 5.14 this can be replaced by the new implemented properties:
     //   valueRole: "value"`
     //   currentValue: model.value
-
     property var currentValue
     property var values: []
+
+    property bool multipleChoice: false
+    property int selectionMask: 0
+    property var itemText: []
 
     currentIndex: model.selectedIndex
 
     onActivated: (index) => {
         currentValue = values[index];
+    }
+
+    onSelectionMaskChanged: {
+        if (multipleChoice) {
+            displayText = selectionText();
+        }
+    }
+
+    onCountChanged: {
+        selectionMaskChanged();
     }
 
     delegate: QQC2.ItemDelegate {
@@ -52,6 +65,15 @@ QQC2.ComboBox {
         LayoutMirroring.childrenInherit: true
 
         contentItem: RowLayout {
+            QQC2.CheckBox {
+                id: itemSelection
+                visible: multipleChoice
+                checked: (selectionMask & (1 << value))
+                onToggled: {
+                    selectionMask = (selectionMask & ~(1 << value)) | (checked << value);
+                    activated(index);
+                }
+            }
             Kirigami.Icon {
                 source: model.icon
                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
@@ -72,7 +94,22 @@ QQC2.ComboBox {
 
         Component.onCompleted: {
             values[index] = model.value;
+            itemText[index] = model.text;
             optionsCombo.popup.width = Math.max(implicitWidth, optionsCombo.width, optionsCombo.popup.width);
+        }
+    }
+
+    function selectionText() {
+        var selectionCount = selectionMask.toString(2).replace(/0/g, '').length;
+        switch (selectionCount) {
+            case 0: return i18n("None selected");
+            case count: return i18n("All selected");
+            case 1: break;
+            default: return i18np("1 selected", "%1 selected", selectionCount);
+        }
+        // Use the display text of the only selected item
+        for (var i = 0; i < count; i++) {
+            if (selectionMask & (1 << values[i])) return itemText[i];
         }
     }
 }
