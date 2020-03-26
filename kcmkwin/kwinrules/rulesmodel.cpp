@@ -333,46 +333,46 @@ void RulesModel::populateRuleList()
     m_ruleList.clear();
 
     //Rule description
-    addRule(new RuleItem(QLatin1String("description"),
-                         RulePolicy::NoPolicy, RuleItem::String,
-                         i18n("Description"), i18n("Window matching"),
-                         QIcon::fromTheme("entry-edit")));
-    m_rules["description"]->setFlag(RuleItem::AlwaysEnabled);
-    m_rules["description"]->setFlag(RuleItem::AffectsDescription);
+    auto description = addRule(new RuleItem(QLatin1String("description"),
+                                            RulePolicy::NoPolicy, RuleItem::String,
+                                            i18n("Description"), i18n("Window matching"),
+                                            QIcon::fromTheme("entry-edit")));
+    description->setFlag(RuleItem::AlwaysEnabled);
+    description->setFlag(RuleItem::AffectsDescription);
 
     // Window matching
-    addRule(new RuleItem(QLatin1String("wmclass"),
-                         RulePolicy::StringMatch, RuleItem::String,
-                         i18n("Window class (application)"), i18n("Window matching"),
-                         QIcon::fromTheme("window")));
-    m_rules["wmclass"]->setFlag(RuleItem::AlwaysEnabled);
-    m_rules["wmclass"]->setFlag(RuleItem::AffectsDescription);
-    m_rules["wmclass"]->setFlag(RuleItem::AffectsWarning);
+    auto wmclass = addRule(new RuleItem(QLatin1String("wmclass"),
+                                        RulePolicy::StringMatch, RuleItem::String,
+                                        i18n("Window class (application)"), i18n("Window matching"),
+                                        QIcon::fromTheme("window")));
+    wmclass->setFlag(RuleItem::AlwaysEnabled);
+    wmclass->setFlag(RuleItem::AffectsDescription);
+    wmclass->setFlag(RuleItem::AffectsWarning);
 
-    addRule(new RuleItem(QLatin1String("wmclasscomplete"),
-                         RulePolicy::NoPolicy, RuleItem::Boolean,
-                         i18n("Match whole window class"), i18n("Window matching"),
-                         QIcon::fromTheme("window")));
-    m_rules["wmclasscomplete"]->setFlag(RuleItem::AlwaysEnabled);
+    auto wmclasscomplete = addRule(new RuleItem(QLatin1String("wmclasscomplete"),
+                                                RulePolicy::NoPolicy, RuleItem::Boolean,
+                                                i18n("Match whole window class"), i18n("Window matching"),
+                                                QIcon::fromTheme("window")));
+    wmclasscomplete->setFlag(RuleItem::AlwaysEnabled);
 
-    addRule(new RuleItem(QLatin1String("types"),
-                         RulePolicy::NoPolicy, RuleItem::FlagsOption,
-                         i18n("Window types"), i18n("Window matching"),
-                         QIcon::fromTheme("window-duplicate")));
-    m_rules["types"]->setOptionsData(windowTypesModelData());
-    m_rules["types"]->setFlag(RuleItem::AlwaysEnabled);
-    m_rules["types"]->setFlag(RuleItem::AffectsWarning);
+    auto types = addRule(new RuleItem(QLatin1String("types"),
+                                      RulePolicy::NoPolicy, RuleItem::FlagsOption,
+                                      i18n("Window types"), i18n("Window matching"),
+                                      QIcon::fromTheme("window-duplicate")));
+    types->setOptionsData(windowTypesModelData());
+    types->setFlag(RuleItem::AlwaysEnabled);
+    types->setFlag(RuleItem::AffectsWarning);
 
     addRule(new RuleItem(QLatin1String("windowrole"),
                          RulePolicy::NoPolicy, RuleItem::String,
                          i18n("Window role"), i18n("Window matching"),
                          QIcon::fromTheme("dialog-object-properties")));
 
-    addRule(new RuleItem(QLatin1String("title"),
-                         RulePolicy::StringMatch, RuleItem::String,
-                         i18n("Window title"), i18n("Window matching"),
-                         QIcon::fromTheme("edit-comment")));
-    m_rules["title"]->setFlag(RuleItem::AffectsDescription);
+    auto title = addRule(new RuleItem(QLatin1String("title"),
+                                      RulePolicy::StringMatch, RuleItem::String,
+                                      i18n("Window title"), i18n("Window matching"),
+                                      QIcon::fromTheme("edit-comment")));
+    title->setFlag(RuleItem::AffectsDescription);
 
     addRule(new RuleItem(QLatin1String("clientmachine"),
                          RulePolicy::StringMatch, RuleItem::String,
@@ -400,20 +400,20 @@ void RulesModel::populateRuleList()
                          i18n("Maximized vertically"), i18n("Size & Position"),
                          QIcon::fromTheme("resizerow")));
 
-    addRule(new RuleItem(QLatin1String("desktop"),
-                         RulePolicy::SetRule, RuleItem::Option,
-                         i18n("Virtual Desktop"), i18n("Size & Position"),
-                         QIcon::fromTheme("virtual-desktops")));
-    m_rules["desktop"]->setOptionsData(virtualDesktopsModelData());
+    auto desktop = addRule(new RuleItem(QLatin1String("desktop"),
+                                        RulePolicy::SetRule, RuleItem::Option,
+                                        i18n("Virtual Desktop"), i18n("Size & Position"),
+                                        QIcon::fromTheme("virtual-desktops")));
+    desktop->setOptionsData(virtualDesktopsModelData());
 
 #ifdef KWIN_BUILD_ACTIVITIES
     m_activities = new KActivities::Consumer(this);
 
-    addRule(new RuleItem(QLatin1String("activity"),
-                         RulePolicy::SetRule, RuleItem::Option,
-                         i18n("Activity"), i18n("Size & Position"),
-                         QIcon::fromTheme("activities")));
-    m_rules["activity"]->setOptionsData(activitiesModelData());
+    auto activity = addRule(new RuleItem(QLatin1String("activity"),
+                                         RulePolicy::SetRule, RuleItem::Option,
+                                         i18n("Activity"), i18n("Size & Position"),
+                                         QIcon::fromTheme("activities")));
+    activity->setOptionsData(activitiesModelData());
 
     // Activites consumer may update the available activities later
     connect(m_activities, &KActivities::Consumer::activitiesChanged,
@@ -443,11 +443,11 @@ void RulesModel::populateRuleList()
                          i18n("Shaded"), i18n("Size & Position"),
                          QIcon::fromTheme("window-shade")));
 
-    addRule(new RuleItem(QLatin1String("placement"),
-                         RulePolicy::ForceRule, RuleItem::Option,
-                         i18n("Initial placement"), i18n("Size & Position"),
-                         QIcon::fromTheme("region")));
-    m_rules["placement"]->setOptionsData(placementModelData());
+    auto placement = addRule(new RuleItem(QLatin1String("placement"),
+                                          RulePolicy::ForceRule, RuleItem::Option,
+                                          i18n("Initial placement"), i18n("Size & Position"),
+                                          QIcon::fromTheme("region")));
+    placement->setOptionsData(placementModelData());
 
     addRule(new RuleItem(QLatin1String("ignoregeometry"),
                          RulePolicy::SetRule, RuleItem::Boolean,
@@ -518,11 +518,11 @@ void RulesModel::populateRuleList()
                          i18n("No titlebar and frame"), i18n("Appearance & Fixes"),
                          QIcon::fromTheme("dialog-cancel")));
 
-    addRule(new RuleItem(QLatin1String("decocolor"),
-                         RulePolicy::ForceRule, RuleItem::Option,
-                         i18n("Titlebar color scheme"), i18n("Appearance & Fixes"),
-                         QIcon::fromTheme("preferences-desktop-theme")));
-    m_rules["decocolor"]->setOptionsData(colorSchemesModelData());
+    auto decocolor = addRule(new RuleItem(QLatin1String("decocolor"),
+                                          RulePolicy::ForceRule, RuleItem::Option,
+                                          i18n("Titlebar color scheme"), i18n("Appearance & Fixes"),
+                                          QIcon::fromTheme("preferences-desktop-theme")));
+    decocolor->setOptionsData(colorSchemesModelData());
 
     addRule(new RuleItem(QLatin1String("opacityactive"),
                          RulePolicy::ForceRule, RuleItem::Percentage,
@@ -534,27 +534,27 @@ void RulesModel::populateRuleList()
                          i18n("Inactive opacity"), i18n("Appearance & Fixes"),
                          QIcon::fromTheme("edit-opacity")));
 
-    addRule(new RuleItem(QLatin1String("fsplevel"),
-                         RulePolicy::ForceRule, RuleItem::Option,
-                         i18n("Focus stealing prevention"), i18n("Appearance & Fixes"),
-                         QIcon::fromTheme("preferences-system-windows-effect-glide"),
-                         i18n("KWin tries to prevent windows from taking the focus\n"
-                              "(\"activate\") while you're working in another window,\n"
-                              "but this may sometimes fail or superact.\n"
-                              "\"None\" will unconditionally allow this window to get the focus while\n"
-                              "\"Extreme\" will completely prevent it from taking the focus.")));
-    m_rules["fsplevel"]->setOptionsData(focusModelData());
+    auto fsplevel = addRule(new RuleItem(QLatin1String("fsplevel"),
+                                         RulePolicy::ForceRule, RuleItem::Option,
+                                         i18n("Focus stealing prevention"), i18n("Appearance & Fixes"),
+                                         QIcon::fromTheme("preferences-system-windows-effect-glide"),
+                                         i18n("KWin tries to prevent windows from taking the focus\n"
+                                              "(\"activate\") while you're working in another window,\n"
+                                              "but this may sometimes fail or superact.\n"
+                                              "\"None\" will unconditionally allow this window to get the focus while\n"
+                                              "\"Extreme\" will completely prevent it from taking the focus.")));
+    fsplevel->setOptionsData(focusModelData());
 
-    addRule(new RuleItem(QLatin1String("fpplevel"),
-                         RulePolicy::ForceRule, RuleItem::Option,
-                         i18n("Focus protection"), i18n("Appearance & Fixes"),
-                         QIcon::fromTheme("preferences-system-windows-effect-minimize"),
-                         i18n("This controls the focus protection of the currently active window.\n"
-                              "None will always give the focus away,\n"
-                              "Extreme will keep it.\n"
-                              "Otherwise it's interleaved with the stealing prevention\n"
-                              "assigned to the window that wants the focus.")));
-    m_rules["fpplevel"]->setOptionsData(focusModelData());
+    auto fpplevel = addRule(new RuleItem(QLatin1String("fpplevel"),
+                                         RulePolicy::ForceRule, RuleItem::Option,
+                                         i18n("Focus protection"), i18n("Appearance & Fixes"),
+                                         QIcon::fromTheme("preferences-system-windows-effect-minimize"),
+                                         i18n("This controls the focus protection of the currently active window.\n"
+                                              "None will always give the focus away,\n"
+                                              "Extreme will keep it.\n"
+                                              "Otherwise it's interleaved with the stealing prevention\n"
+                                              "assigned to the window that wants the focus.")));
+    fpplevel->setOptionsData(focusModelData());
 
     addRule(new RuleItem(QLatin1String("acceptfocus"),
                          RulePolicy::ForceRule, RuleItem::Boolean,
@@ -582,11 +582,11 @@ void RulesModel::populateRuleList()
                          i18n("Closeable"), i18n("Appearance & Fixes"),
                          QIcon::fromTheme("dialog-close")));
 
-    addRule(new RuleItem(QLatin1String("type"),
-                         RulePolicy::ForceRule, RuleItem::Option,
-                         i18n("Set window type"), i18n("Appearance & Fixes"),
-                         QIcon::fromTheme("window-duplicate")));
-    m_rules["type"]->setOptionsData(windowTypesModelData());
+    auto type = addRule(new RuleItem(QLatin1String("type"),
+                                     RulePolicy::ForceRule, RuleItem::Option,
+                                     i18n("Set window type"), i18n("Appearance & Fixes"),
+                                     QIcon::fromTheme("window-duplicate")));
+    type->setOptionsData(windowTypesModelData());
 
     addRule(new RuleItem(QLatin1String("desktopfile"),
                          RulePolicy::SetRule, RuleItem::String,
