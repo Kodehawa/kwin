@@ -23,13 +23,12 @@
 
 #include "optionsmodel.h"
 
+#include <QFlag>
 #include <QIcon>
 
 
 namespace KWin
 {
-
-class RuleItemPrivate;
 
 class RuleItem : public QObject
 {
@@ -65,8 +64,8 @@ public:
              const Type type,
              const QString &name,
              const QString &section,
-             const QString &iconName = QStringLiteral("window"),
-             const QList<OptionsModel::Data> &options = {}
+             const QIcon &icon = QIcon::fromTheme("window"),
+             const QString &description = QString("")
             );
     ~RuleItem();
 
@@ -75,15 +74,13 @@ public:
     QString section() const;
     QIcon icon() const;
     QString iconName() const;
+    QString description() const;
 
     bool isEnabled() const;
     void setEnabled(bool enabled);
 
-    QString description() const;
-    void setDescription(const QString &description);
-
-    bool hasFlag(uint flag) const;
-    void setFlags(uint flags, bool active=true);
+    bool hasFlag(RuleItem::Flags flag) const;
+    void setFlag(RuleItem::Flags flag, bool active=true);
 
     Type type() const;
     QVariant value() const;
@@ -104,9 +101,20 @@ private:
     static QVariant typedValue(const QVariant &value, const Type type);
 
 private:
-    RuleItemPrivate *d;
-    RulePolicy *p;
-    OptionsModel *o;
+    QString m_key;
+    RuleItem::Type m_type;
+    QString m_name;
+    QString m_section;
+    QIcon m_icon;
+    QString m_description;
+    QFlags<Flags> m_flags;
+
+    bool m_enabled;
+
+    QVariant m_value;
+
+    RulePolicy *m_policy;
+    OptionsModel *m_options;
 };
 
 }   //namespace

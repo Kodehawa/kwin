@@ -24,194 +24,157 @@
 namespace KWin
 {
 
-class RuleItemPrivate
-{
-public:
-    RuleItemPrivate(const QString &key, const QString &name, const QString &section, const QString &iconName)
-    : m_key(key)
-    , m_name(name)
-    , m_section(section)
-    , m_icon(QIcon::fromTheme(iconName))
-    , m_enabled(false)
-    , m_flags(0)
-    {};
-
-public:
-    QString m_key;
-    QString m_name;
-    QString m_section;
-    QIcon m_icon;
-
-    bool m_enabled;
-
-    QString m_description;
-    uint m_flags;
-
-    RuleItem::Type m_type;
-    QVariant m_value;
-};
-
-
 RuleItem::RuleItem(const QString &key,
                    const RulePolicy::Type policyType,
                    const RuleItem::Type type,
                    const QString &name,
                    const QString &section,
-                   const QString &iconName,
-                   const QList<OptionsModel::Data> &options
-                  )
-    : d(new RuleItemPrivate(key, name, section, iconName))
-    , p(new RulePolicy(policyType))
-    , o(nullptr)
+                   const QIcon &icon,
+                   const QString &description)
+    : m_key(key)
+    , m_type(type)
+    , m_name(name)
+    , m_section(section)
+    , m_icon(icon)
+    , m_description(description)
+    , m_flags(NoFlags)
+    , m_enabled(false)
+    , m_policy(new RulePolicy(policyType))
+    , m_options(nullptr)
 {
-    d->m_type = type;
-    if (type == Option || type == FlagsOption) {
-        o = new OptionsModel(options);
-    }
-
     reset();
 }
 
 RuleItem::~RuleItem()
 {
-    delete d;
-    delete p;
-    delete o;
+    delete m_policy;
+    delete m_options;
 }
 
 void RuleItem::reset()
 {
-    d->m_enabled = hasFlag(AlwaysEnabled) | hasFlag(StartEnabled);
-    d->m_value = typedValue(QVariant(), d->m_type);
-    p->resetValue();
-    if (o) {
-        o->resetValue();
+    m_enabled = hasFlag(AlwaysEnabled) | hasFlag(StartEnabled);
+    m_value = typedValue(QVariant(), m_type);
+    m_policy->resetValue();
+    if (m_options) {
+        m_options->resetValue();
     }
 }
 
 QString RuleItem::key() const
 {
-    return d->m_key;
+    return m_key;
 }
 
 QString RuleItem::name() const
 {
-    return d->m_name;
+    return m_name;
 }
 
 QString RuleItem::section() const
 {
-    return d->m_section;
+    return m_section;
 }
 
 QString RuleItem::iconName() const
 {
-    return d->m_icon.name();
+    return m_icon.name();
 }
 
 QIcon RuleItem::icon() const
 {
-    return d->m_icon;
+    return m_icon;
 }
 
 QString RuleItem::description() const
 {
-    return d->m_description;
-}
-
-void RuleItem::setDescription(const QString& description)
-{
-    d->m_description = description;
+    return m_description;
 }
 
 bool RuleItem::isEnabled() const
 {
-    return d->m_enabled;
+    return m_enabled;
 }
 
 void RuleItem::setEnabled(bool enabled)
 {
-    d->m_enabled = enabled | hasFlag(AlwaysEnabled);
+    m_enabled = enabled | hasFlag(AlwaysEnabled);
 }
 
-bool RuleItem::hasFlag(uint flag) const
+bool RuleItem::hasFlag(RuleItem::Flags flag) const
 {
-    return (d->m_flags & flag) == flag;
+    return m_flags.testFlag(flag);
 }
 
-void RuleItem::setFlags(uint flags, bool active)
+void RuleItem::setFlag(RuleItem::Flags flag, bool active)
 {
-    if (active) {
-        d->m_flags |= flags;
-    } else {
-        d->m_flags &= (AllFlags ^ flags);
-    }
+    m_flags.setFlag(flag, active);
 }
 
 RuleItem::Type RuleItem::type() const
 {
-    return d->m_type;
+    return m_type;
 }
 
 QVariant RuleItem::value() const
 {
-    if (d->m_type == Option) {
-        return o->value();
+    if (m_type == Option) {
+        return m_options->value();
     }
-    return d->m_value;
+    return m_value;
 }
 
 void RuleItem::setValue(QVariant value)
 {
-    if (d->m_type == Option) {
-        o->setValue(value);
+    if (m_type == Option) {
+        m_options->setValue(value);
     }
-    d->m_value = typedValue(value, d->m_type);
+    m_value = typedValue(value, m_type);
 }
 
 QVariant RuleItem::options() const
 {
-    if (!o) {
+    if (!m_options) {
         return QVariant();
     }
-    return QVariant::fromValue(o);
+    return QVariant::fromValue(m_options);
 }
 
 void RuleItem::setOptionsData(const QList<OptionsModel::Data> &data)
 {
-    if (!o) {
-        if (d->m_type != Option && d->m_type != FlagsOption) {
+    if (!m_options) {
+        if (m_type != Option && m_type != FlagsOption) {
             return;
         }
-        o = new OptionsModel();
+        m_options = new OptionsModel();
     }
-    o->updateModelData(data);
-    o->setValue(d->m_value);
+    m_options->updateModelData(data);
+    m_options->setValue(m_value);
 }
 
 int RuleItem::policy() const
 {
-    return p->value();
+    return m_policy->value();
 }
 
 void RuleItem::setPolicy(int policy)
 {
-    p->setValue(policy);
+    m_policy->setValue(policy);
 }
 
 RulePolicy::Type RuleItem::policyType() const
 {
-    return p->type();
+    return m_policy->type();
 }
 
 QVariant RuleItem::policyModel() const
 {
-    return QVariant::fromValue(p);
+    return QVariant::fromValue(m_policy);
 }
 
 QString RuleItem::policyKey() const
 {
-    return p->policyKey(d->m_key);
+    return m_policy->policyKey(m_key);
 }
 
 QVariant RuleItem::typedValue(const QVariant &value, const RuleItem::Type type)
