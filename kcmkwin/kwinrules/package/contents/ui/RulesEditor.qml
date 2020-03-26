@@ -67,6 +67,14 @@ ScrollViewKCM {
     footer: ColumnLayout {
         id: kcmFooter
 
+        // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            text: rulesModel.warningMessage
+            visible: text != ""
+        }
+
         RowLayout {
             Item {
                 Layout.fillWidth: true
@@ -90,21 +98,6 @@ ScrollViewKCM {
                                         : i18np("After 1 second", "After %1 seconds", value)
                 }
             }
-        }
-
-        // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
-        Kirigami.InlineMessage {
-            id: warningMessage
-
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            visible: rulesModel.showWarning
-            text: i18n("You have specified the window class as unimportant.\n" +
-                       "This means the settings will possibly apply to windows from all " +
-                       "applications. If you really want to create a generic setting, it is " +
-                       "recommended you at least limit the window types to avoid special window " +
-                       "types.")
         }
     }
 

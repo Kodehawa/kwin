@@ -42,7 +42,7 @@ class RulesModel : public QAbstractListModel
     Q_OBJECT
 
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
-    Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
+    Q_PROPERTY(QString warningMessage READ warningMessage NOTIFY warningMessageChanged)
 
 public:
     enum RulesRole {
@@ -83,17 +83,19 @@ public:
     void prefillProperties(const QVariantMap &info);
 
     QString description() const;
-    bool isWarningShown() const;
+    QString warningMessage() const;
+
 
 public slots:
     void detectWindowProperties(int secs);
 
 signals:
     void descriptionChanged();
-    void showWarningChanged();
+    void warningMessageChanged();
 
 private:
     void populateRuleList();
+    bool wmclassWarning() const;
     RuleItem *addRule(RuleItem *rule);
     QString defaultDescription() const;
 

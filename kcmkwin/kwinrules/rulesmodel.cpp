@@ -155,7 +155,7 @@ bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int ro
         emit descriptionChanged();
     }
     if (rule->hasFlag(RuleItem::AffectsWarning)) {
-        emit showWarningChanged();
+        emit warningMessageChanged();
     }
 
     return true;
@@ -204,7 +204,20 @@ QString RulesModel::defaultDescription() const
     return i18n("New window settings");
 }
 
-bool RulesModel::isWarningShown() const
+QString RulesModel::warningMessage() const
+{
+    if (wmclassWarning()) {
+        return i18n("You have specified the window class as unimportant.\n"
+                    "This means the settings will possibly apply to windows from all applications."
+                    " If you really want to create a generic setting, it is recommended"
+                    " you at least limit the window types to avoid special window types.");
+    }
+
+    return QString();
+}
+
+
+bool RulesModel::wmclassWarning() const
 {
     const bool no_wmclass = !m_rules["wmclass"]->isEnabled()
                                 || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
@@ -246,7 +259,7 @@ void RulesModel::readFromSettings(RuleSettings *settings)
     endResetModel();
 
     emit descriptionChanged();
-    emit showWarningChanged();
+    emit warningMessageChanged();
 }
 
 void RulesModel::writeToSettings(RuleSettings *settings) const
@@ -660,7 +673,7 @@ void RulesModel::prefillProperties(const QVariantMap &info)
     endResetModel();
 
     emit descriptionChanged();
-    emit showWarningChanged();
+    emit warningMessageChanged();
 }
 
 
