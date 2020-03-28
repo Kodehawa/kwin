@@ -41,7 +41,7 @@ class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
+    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
     Q_PROPERTY(QString warningMessage READ warningMessage NOTIFY warningMessageChanged)
 
 public:
@@ -83,6 +83,7 @@ public:
     void prefillProperties(const QVariantMap &info);
 
     QString description() const;
+    void setDescription(const QString &description);
     QString warningMessage() const;
 
 

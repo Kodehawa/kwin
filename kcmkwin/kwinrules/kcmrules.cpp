@@ -161,6 +161,25 @@ void KCMKWinRules::editRule(int index)
     setCurrentIndex(1);
 }
 
+void KCMKWinRules::setRuleDescription(int index, const QString &description)
+{
+    if (index < 0 || index >= m_rules.count()
+            || (description == m_rules.at(index)->description)) {
+        return;
+    }
+
+    if (index == m_editingIndex) {
+        m_rulesModel->setDescription(description);
+        return;
+    }
+
+    m_rules.at(index)->description = description;
+
+    emit ruleBookModelChanged();
+    updateNeedsSave();
+}
+
+
 void KCMKWinRules::createRule()
 {
 

@@ -189,6 +189,11 @@ QString RulesModel::description() const
     return defaultDescription();
 }
 
+void RulesModel::setDescription(const QString &description)
+{
+    setData(index(0, 0), description, RulesModel::ValueRole);
+}
+
 QString RulesModel::defaultDescription() const
 {
     const QString wmclass = m_rules["wmclass"]->value().toString();

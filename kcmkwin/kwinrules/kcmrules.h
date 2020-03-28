@@ -44,6 +44,7 @@ public:
     explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
     ~KCMKWinRules() override;
 
+    Q_INVOKABLE void setRuleDescription(int index, const QString &description);
     Q_INVOKABLE void editRule(int index);
 
     Q_INVOKABLE void createRule();

@@ -117,12 +117,32 @@ ScrollViewKCM {
                     }
                 }
 
-                QQC2.Label {
+                QQC2.TextField {
+                    id: descriptionField
+                    Layout.minimumWidth: Kirigami.Units.gridUnit * 2
+                    Layout.fillWidth: true
+                    background: Item {}
+                    horizontalAlignment: Text.AlignLeft
                     text: modelData
+                    onEditingFinished: {
+                        kcm.setRuleDescription(index, text);
+                    }
+                    Keys.onPressed: {
+                        switch (event.key) {
+                        case Qt.Key_Escape:
+                            // On <Esc> key reset to model data before losing focus
+                            text = modelData;
+                        case Qt.Key_Enter:
+                        case Qt.Key_Return:
+                            ruleBookItem.focus = true;
+                            event.accepted = true;
+                            break;
+                        }
+                    }
                 }
 
                 Kirigami.ActionToolBar {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: maximumContentWidth + Kirigami.Units.smallSpacing
                     alignment: Qt.AlignRight
                     display: QQC2.Button.IconOnly
                     opacity: ruleBookItem.hovered ? 1 : 0
