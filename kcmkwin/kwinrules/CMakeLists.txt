@@ -31,14 +31,9 @@ set(kwin_kcm_rules_XCB_LIBS
 )
 
 set(kcm_libs
-    Qt5::Concurrent
-    Qt5::X11Extras
     Qt5::QuickWidgets
 
-    KF5::Completion
-    KF5::ConfigWidgets
     KF5::I18n
-    KF5::Service
     KF5::WindowSystem
     KF5::XmlGui
 )
@@ -64,10 +59,7 @@ target_link_libraries(kcm_kwinrules
     Qt5::Quick
 
     KF5::I18n
-    KF5::ConfigWidgets
-    KF5::CoreAddons
     KF5::QuickAddons
-    KF5::WindowSystem
 
     ${kcm_libs}
     ${kwin_kcm_rules_XCB_LIBS}
