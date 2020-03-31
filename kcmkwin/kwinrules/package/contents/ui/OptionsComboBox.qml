@@ -28,7 +28,7 @@ import org.kde.kirigami 2.10 as Kirigami
 QQC2.ComboBox {
     id: optionsCombo
 
-    textRole: "text"
+    textRole: "display"
     //FIXME: After Qt 5.14 this can be replaced by the new implemented properties:
     //   valueRole: "value"`
     //   currentValue: model.value
@@ -75,12 +75,12 @@ QQC2.ComboBox {
                 }
             }
             Kirigami.Icon {
-                source: model.icon
+                source: model.decoration
                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
                 Layout.preferredWidth: Kirigami.Units.iconSizes.small
             }
             QQC2.Label {
-                text: model.text
+                text: model.display
                 color: highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignLeft
@@ -88,13 +88,13 @@ QQC2.ComboBox {
         }
 
         QQC2.ToolTip {
-            text: model.description
-            visible: hovered && (model.description != "")
+            text: model.tooltip
+            visible: hovered && (model.tooltip != "")
         }
 
         Component.onCompleted: {
             values[index] = model.value;
-            itemText[index] = model.text;
+            itemText[index] = model.display;
             optionsCombo.popup.width = Math.max(implicitWidth, optionsCombo.width, optionsCombo.popup.width);
         }
 

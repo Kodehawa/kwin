@@ -29,10 +29,10 @@ namespace KWin
 QHash<int, QByteArray> OptionsModel::roleNames() const
 {
     return {
-        {Qt::DisplayRole,    QByteArrayLiteral("text")},
+        {Qt::DisplayRole,    QByteArrayLiteral("display")},
+        {Qt::DecorationRole, QByteArrayLiteral("decoration")},
+        {Qt::ToolTipRole,    QByteArrayLiteral("tooltip")},
         {Qt::UserRole,       QByteArrayLiteral("value")},
-        {Qt::DecorationRole, QByteArrayLiteral("icon")},
-        {Qt::ToolTipRole,    QByteArrayLiteral("description")},
         {Qt::UserRole + 1,   QByteArrayLiteral("iconName")},
     };
 }
