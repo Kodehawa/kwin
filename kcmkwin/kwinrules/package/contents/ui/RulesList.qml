@@ -57,16 +57,23 @@ ScrollViewKCM {
             color: Kirigami.Theme.highlightColor
             visible: (dropIndex >= 0) && (dropIndex != dragIndex)
 
-            Connections {
-                target: rulesListKCM
-                onDropIndexChanged: {
-                    if (dropIndex >= 0) {
-                        // TODO: After Qt 5.13 we can use ListView.itemAtIndex(index)
-                        var dropItem = ruleBookView.contentItem.children[dropIndex];
-                        dropIndicator.y = (dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height;
-                    }
+            function reposition() {
+                if (dropIndex >= 0) {
+                    // TODO: After Qt 5.13 we can use ListView.itemAtIndex(dropIndex)
+                    var dropItem = ruleBookView.contentItem.children[dropIndex];
+                    dropIndicator.y = ruleBookView.contentItem.y
+                                        + ((dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height);
                 }
             }
+            Connections {
+                target: rulesListKCM
+                onDropIndexChanged: dropIndicator.reposition();
+            }
+            Connections {
+                target: ruleBookView.contentItem
+                onYChanged: dropIndicator.reposition();
+            }
+
         }
     }
 
