@@ -97,6 +97,10 @@ QQC2.ComboBox {
             itemText[index] = model.text;
             optionsCombo.popup.width = Math.max(implicitWidth, optionsCombo.width, optionsCombo.popup.width);
         }
+
+        onFocusChanged: {
+            if (!focus) popup.close();
+        }
     }
 
     function selectionText() {
