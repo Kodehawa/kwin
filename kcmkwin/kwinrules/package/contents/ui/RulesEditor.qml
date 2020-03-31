@@ -100,7 +100,7 @@ ScrollViewKCM {
 
     KSortFilterProxyModel {
         id: filterModel
-        sourceModel: kcm.rulesModel
+        sourceModel: rulesModel
 
         property bool showAll: showAllButton.checked
         onShowAllChanged: {
