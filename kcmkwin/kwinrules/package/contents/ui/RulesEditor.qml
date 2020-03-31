@@ -81,12 +81,12 @@ ScrollViewKCM {
                 text: i18n("Detect window properties")
                 icon.name: "edit-find"    // TODO: Better icon for "Detect window properties"
                 onClicked: {
-                    rulesModel.detectWindowProperties(detection_delay.value);
+                    rulesModel.detectWindowProperties(delaySpin.value);
                 }
             }
 
             QQC2.SpinBox {
-                id: detection_delay
+                id: delaySpin
                 Layout.minimumWidth: Kirigami.Units.gridUnit * 6
                 from: 0
                 to: 30
