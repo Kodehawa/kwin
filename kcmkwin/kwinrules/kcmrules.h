@@ -64,7 +64,6 @@ signals:
 
 private slots:
     void updateNeedsSave();
-    void updateState();
 
 private:
     QStringList ruleBookModel() const;

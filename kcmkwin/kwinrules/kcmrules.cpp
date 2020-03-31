@@ -108,16 +108,6 @@ void KCMKWinRules::save()
     QDBusConnection::sessionBus().send(message);
 }
 
-void KCMKWinRules::updateState()
-{
-    m_ruleBook->setCount(m_rules.count());
-
-    emit editingIndexChanged();
-    emit ruleBookModelChanged();
-
-    updateNeedsSave();
-}
-
 void KCMKWinRules::updateNeedsSave()
 {
     setNeedsSave(true);
@@ -177,14 +167,15 @@ void KCMKWinRules::setRuleDescription(int index, const QString &description)
 
 void KCMKWinRules::createRule()
 {
+    const int newIndex = m_rules.count();
 
     m_rules.append(new Rules());
-    updateState();
+    m_ruleBook->setCount(m_rules.count());
 
-    const int newIndex = m_rules.count() - 1;
+    emit ruleBookModelChanged();
+    updateNeedsSave();
+
     editRule(newIndex);
-
-    saveCurrentRule();
 }
 
 void KCMKWinRules::removeRule(int index)
@@ -203,8 +194,10 @@ void KCMKWinRules::removeRule(int index)
 
     delete(m_rules.at(index));
     m_rules.removeAt(index);
+    m_ruleBook->setCount(m_rules.count());
 
-    updateState();
+    emit ruleBookModelChanged();
+    updateNeedsSave();
 }
 
 void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
@@ -294,7 +287,8 @@ void KCMKWinRules::importFromFile(const QUrl &path)
         }
     }
 
-    updateState();
+    m_ruleBook->setCount(m_rules.count());
+    emit ruleBookModelChanged();
 }
 
 K_PLUGIN_CLASS_WITH_JSON(KCMKWinRules, "kcm_kwinrules.json");
