@@ -201,6 +201,8 @@ void KCMKWinRules::removeRule(int index)
     if (m_editingIndex == index) {
         m_editingIndex = -1;
         pop();
+    } else if (m_editingIndex > index) {
+        m_editingIndex -= 1;
     }
 
     delete(m_rules.at(index));
