@@ -89,7 +89,6 @@ void KCMKWinRules::load()
     // Check if current index is no longer valid
     if (m_editingIndex >= m_rules.count()) {
         m_editingIndex = -1;
-        pop();
         emit editingIndexChanged();
     }
     // Reset current index for rule editor
@@ -153,11 +152,7 @@ void KCMKWinRules::editRule(int index)
     m_rulesModel->importFromRules(m_rules.at(m_editingIndex));
 
     emit editingIndexChanged();
-
-    // Show and move to Rules Editor page
-    if (depth() < 2) {
-        push(QStringLiteral("RulesEditor.qml"));
-    }
+    // Set the active page to rules editor (0:RulesList, 1:RulesEditor)
     setCurrentIndex(1);
 }
 
@@ -200,9 +195,10 @@ void KCMKWinRules::removeRule(int index)
 
     if (m_editingIndex == index) {
         m_editingIndex = -1;
-        pop();
+        emit editingIndexChanged();
     } else if (m_editingIndex > index) {
         m_editingIndex -= 1;
+        emit editingIndexChanged();
     }
 
     delete(m_rules.at(index));

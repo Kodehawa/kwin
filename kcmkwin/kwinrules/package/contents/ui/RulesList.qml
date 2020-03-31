@@ -37,6 +37,20 @@ ScrollViewKCM {
     ConfigModule.columnWidth: Kirigami.Units.gridUnit * 22
     ConfigModule.buttons: ConfigModule.Apply
 
+    // Manage KCM pages
+    Connections {
+        target: kcm
+        onEditingIndexChanged: {
+            if (kcm.editingIndex < 0) {
+                // If no rule is being edited, hide RulesEdidor page
+                kcm.pop();
+            } else if (kcm.depth < 2) {
+                // Add the RulesEditor page if it wasn't already
+                kcm.push("RulesEditor.qml");
+            }
+        }
+    }
+
     view: ListView {
         id: ruleBookView
         clip: true
