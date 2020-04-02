@@ -4,7 +4,7 @@ project(KWin)
 set(PROJECT_VERSION "5.18.80")
 set(PROJECT_VERSION_MAJOR 5)
 
-set(QT_MIN_VERSION "5.12.0")
+set(QT_MIN_VERSION "5.14.0")
 set(KF5_MIN_VERSION "5.68.0")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
@@ -372,6 +372,9 @@ configure_file(config-kwin.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-kwin.h)
 
 ########### global ###############
 set(kwin_effects_dbus_xml ${CMAKE_CURRENT_SOURCE_DIR}/org.kde.kwin.Effects.xml)
+qt5_add_dbus_interface(effects_interface_SRCS ${kwin_effects_dbus_xml} kwineffects_interface)
+add_library(KWinEffectsInterface STATIC ${effects_interface_SRCS})
+target_link_libraries(KWinEffectsInterface Qt5::DBus)
 
 include_directories(BEFORE
     ${CMAKE_CURRENT_BINARY_DIR}/libkwineffects
