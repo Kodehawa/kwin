@@ -33,8 +33,6 @@ namespace KWin {
 class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
-    //TODO: After Qt 5.14 the QML ComboBox will allow to use the valueRole directly
-    //      instead of changing the index. Remove this exposed property
     Q_PROPERTY(int selectedIndex READ selectedIndex NOTIFY selectedIndexChanged)
 
 public:
@@ -71,7 +69,6 @@ public:
 
     void updateModelData(const QList<Data> &data);
 
-    //TODO: Remove after Qt 5.14
     int selectedIndex() const;
 
 signals:

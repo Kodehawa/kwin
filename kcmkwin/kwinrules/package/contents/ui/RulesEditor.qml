@@ -18,9 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12 as QQC2
+import QtQuick 2.14
+import QtQuick.Layouts 1.14
+import QtQuick.Controls 2.14 as QQC2
 import org.kde.kirigami 2.10 as Kirigami
 import org.kde.kcm 1.2
 import org.kde.kitemmodels 1.0
