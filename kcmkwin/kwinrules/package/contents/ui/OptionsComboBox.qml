@@ -30,30 +30,24 @@ QQC2.ComboBox {
 
     textRole: "display"
     //FIXME: After Qt 5.14 this can be replaced by the new implemented properties:
-    //   valueRole: "value"`
-    //   currentValue: model.value
+    //  Not yet. It is affected by: https://bugs.kde.org/show_bug.cgi?id=419521
+    // ("QQC2.ComboBox.valueRole\" is not available due to component versioning.\n")
+    //      valueRole: "value"
     property var currentValue
     property var values: []
 
     property bool multipleChoice: false
     property int selectionMask: 0
-    property var itemText: []
 
-    currentIndex: model.selectedIndex
+    currentIndex: multipleChoice ? -1 : model.selectedIndex
 
     onActivated: (index) => {
         currentValue = values[index];
     }
 
-    onSelectionMaskChanged: {
-        if (multipleChoice) {
-            displayText = selectionText();
-        }
-    }
-
-    onCountChanged: {
-        selectionMaskChanged();
-    }
+    onSelectionMaskChanged: updateDisplayText()
+    onCountChanged: updateDisplayText()
+    Component.onCompleted: updateDisplayText()
 
     delegate: QQC2.ItemDelegate {
         readonly property bool reversed : Qt.application.layoutDirection === Qt.RightToLeft
@@ -94,7 +88,6 @@ QQC2.ComboBox {
 
         Component.onCompleted: {
             values[index] = model.value;
-            itemText[index] = model.display;
             optionsCombo.popup.width = Math.max(implicitWidth, optionsCombo.width, optionsCombo.popup.width);
         }
 
@@ -103,17 +96,24 @@ QQC2.ComboBox {
         }
     }
 
+    function updateDisplayText() {
+        if (multipleChoice) {
+            displayText = selectionText();
+        }
+    }
+
     function selectionText() {
         var selectionCount = selectionMask.toString(2).replace(/0/g, '').length;
         switch (selectionCount) {
             case 0: return i18n("None selected");
             case count: return i18n("All selected");
-            case 1: break;
+            case 1: break; // return textAt(indexOfValue(selectionMask));
             default: return i18np("1 selected", "%1 selected", selectionCount);
         }
-        // Use the display text of the only selected item
+        // Return the text at the only selected index
         for (var i = 0; i < count; i++) {
-            if (selectionMask & (1 << values[i])) return itemText[i];
+            if (selectionMask & (1 << values[i])) { return textAt(i); }
         }
+
     }
 }
