@@ -73,8 +73,7 @@ ScrollViewKCM {
 
             function reposition() {
                 if (dropIndex >= 0) {
-                    // TODO: After Qt 5.13 we can use ListView.itemAtIndex(dropIndex)
-                    var dropItem = ruleBookView.contentItem.children[dropIndex];
+                    var dropItem = ruleBookView.itemAtIndex(dropIndex);
                     dropIndicator.y = ruleBookView.contentItem.y
                                         + ((dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height);
                 }
@@ -131,11 +130,14 @@ ScrollViewKCM {
                         dropIndex = newIndex;
                     }
                     onDropped: {
-                        if (dropIndex >= 0 && dropIndex != dragIndex) {
-                            kcm.moveRule(dragIndex, dropIndex);
-                        }
+                        var sourceIndex = dragIndex;
+                        var destIndex = dropIndex;
                         dragIndex = -1;
                         dropIndex = -1;
+                        // Execute the movement after resetting the global indices
+                        if (sourceIndex >= 0 && sourceIndex != destIndex) {
+                            kcm.moveRule(sourceIndex, destIndex);
+                        }
                     }
                 }
 
