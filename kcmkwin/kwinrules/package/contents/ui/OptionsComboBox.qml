@@ -36,26 +36,43 @@ QQC2.ComboBox {
     property var currentValue
     property var values: []
 
+    onActivated: (index) => {
+        currentValue = values[index];
+    }
+
     property bool multipleChoice: false
     property int selectionMask: 0
 
     currentIndex: multipleChoice ? -1 : model.selectedIndex
 
-    onActivated: (index) => {
-        currentValue = values[index];
+    displayText: {
+        if (!multipleChoice) {
+            return currentText;
+        }
+        var selectionCount = selectionMask.toString(2).replace(/0/g, '').length;
+        switch (selectionCount) {
+            case 0:
+                return i18n("None selected");
+            case 1:
+                // FIXME: Bug 419521
+                //      var selectedValue = selectionMask.toString(2).length - 1;
+                //      return textAt(indexOfValue(selectedValue));
+                for (var i = 0; i < count; i++) {
+                    if (selectionMask & (1 << values[i])) { return textAt(i); }
+                }
+                break;
+            case count:
+                return i18n("All selected");
+            default:
+                return i18np("1 selected", "%1 selected", selectionCount);
+        }
     }
 
-    onSelectionMaskChanged: updateDisplayText()
-    onCountChanged: updateDisplayText()
-    Component.onCompleted: updateDisplayText()
-
     delegate: QQC2.ItemDelegate {
-        readonly property bool reversed : Qt.application.layoutDirection === Qt.RightToLeft
-
         highlighted: optionsCombo.highlightedIndex == index
         width: parent.width
 
-        LayoutMirroring.enabled: reversed
+        LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
         LayoutMirroring.childrenInherit: true
 
         contentItem: RowLayout {
@@ -94,26 +111,5 @@ QQC2.ComboBox {
         onFocusChanged: {
             if (!focus) popup.close();
         }
-    }
-
-    function updateDisplayText() {
-        if (multipleChoice) {
-            displayText = selectionText();
-        }
-    }
-
-    function selectionText() {
-        var selectionCount = selectionMask.toString(2).replace(/0/g, '').length;
-        switch (selectionCount) {
-            case 0: return i18n("None selected");
-            case count: return i18n("All selected");
-            case 1: break; // return textAt(indexOfValue(selectionMask));
-            default: return i18np("1 selected", "%1 selected", selectionCount);
-        }
-        // Return the text at the only selected index
-        for (var i = 0; i < count; i++) {
-            if (selectionMask & (1 << values[i])) { return textAt(i); }
-        }
-
     }
 }
