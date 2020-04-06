@@ -40,8 +40,8 @@ ScrollViewKCM {
     // Manage KCM pages
     Connections {
         target: kcm
-        onEditingIndexChanged: {
-            if (kcm.editingIndex < 0) {
+        onEditIndexChanged: {
+            if (kcm.editIndex < 0) {
                 // If no rule is being edited, hide RulesEdidor page
                 kcm.pop();
             } else if (kcm.depth < 2) {
@@ -60,7 +60,7 @@ ScrollViewKCM {
             width: ruleBookView.width
             sourceComponent: ruleBookDelegate
         }
-        currentIndex: kcm.editingIndex
+        currentIndex: kcm.editIndex
 
         Rectangle {
             id: dropIndicator
@@ -86,7 +86,6 @@ ScrollViewKCM {
                 target: ruleBookView.contentItem
                 onYChanged: dropIndicator.reposition();
             }
-
         }
     }
 
@@ -147,7 +146,7 @@ ScrollViewKCM {
                     Layout.fillWidth: true
                     background: Item {}
                     horizontalAlignment: Text.AlignLeft
-                    text: modelData
+                    text: display
                     onEditingFinished: {
                         kcm.setRuleDescription(index, text);
                     }
@@ -155,7 +154,7 @@ ScrollViewKCM {
                         switch (event.key) {
                         case Qt.Key_Escape:
                             // On <Esc> key reset to model data before losing focus
-                            text = modelData;
+                            text = display;
                         case Qt.Key_Enter:
                         case Qt.Key_Return:
                             ruleBookItem.focus = true;

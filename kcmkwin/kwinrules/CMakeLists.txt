@@ -47,7 +47,7 @@ add_executable(kwin_rules_dialog main.cpp rulesdialog.cpp)
 target_link_libraries(kwin_rules_dialog KWinRulesObjects)
 install(TARGETS kwin_rules_dialog DESTINATION ${LIBEXEC_INSTALL_DIR})
 
-add_library(kcm_kwinrules MODULE kcmrules.cpp)
+add_library(kcm_kwinrules MODULE kcmrules.cpp rulebookmodel.cpp)
 target_link_libraries(kcm_kwinrules KWinRulesObjects)
 kcoreaddons_desktop_to_json(kcm_kwinrules "kcm_kwinrules.desktop" SERVICE_TYPES kcmodule.desktop)
 

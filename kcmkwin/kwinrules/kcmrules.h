@@ -21,10 +21,8 @@
 #pragma once
 
 #include <rules.h>
-#include "rulebooksettings.h"
+#include "rulebookmodel.h"
 #include "rulesmodel.h"
-
-#include <QStringListModel>
 
 #include <KQuickAddons/ConfigModule>
 
@@ -36,13 +34,12 @@ class KCMKWinRules : public KQuickAddons::ConfigModule
 {
     Q_OBJECT
 
-    Q_PROPERTY(QStringList ruleBookModel READ ruleBookModel NOTIFY ruleBookModelChanged)
-    Q_PROPERTY(int editingIndex READ editingIndex NOTIFY editingIndexChanged)
+    Q_PROPERTY(RuleBookModel *ruleBookModel MEMBER m_ruleBookModel CONSTANT)
     Q_PROPERTY(RulesModel *rulesModel MEMBER m_rulesModel CONSTANT)
+    Q_PROPERTY(int editIndex READ editIndex NOTIFY editIndexChanged)
 
 public:
     explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
-    ~KCMKWinRules() override;
 
     Q_INVOKABLE void setRuleDescription(int index, const QString &description);
     Q_INVOKABLE void editRule(int index);
@@ -59,23 +56,20 @@ public slots:
     void save() override;
 
 signals:
-    void ruleBookModelChanged();
-    void editingIndexChanged();
+    void editIndexChanged();
 
 private slots:
     void updateNeedsSave();
 
 private:
-    QStringList ruleBookModel() const;
-    int editingIndex() const;
+    int editIndex() const;
     void saveCurrentRule();
 
 private:
-    RuleBookSettings *m_ruleBook;
-    QVector<Rules *> m_rules;
+    RuleBookModel *m_ruleBookModel;
     RulesModel* m_rulesModel;
 
-    int m_editingIndex = -1;
+    QPersistentModelIndex m_editIndex;
 };
 
 } // namespace
