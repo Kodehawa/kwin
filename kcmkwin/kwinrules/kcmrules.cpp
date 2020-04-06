@@ -289,6 +289,7 @@ void KCMKWinRules::importFromFile(const QUrl &path)
 
     m_ruleBook->setCount(m_rules.count());
     emit ruleBookModelChanged();
+    updateNeedsSave();
 }
 
 K_PLUGIN_CLASS_WITH_JSON(KCMKWinRules, "kcm_kwinrules.json");
