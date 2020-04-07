@@ -27,9 +27,6 @@ import org.kde.kirigami 2.5 as Kirigami
 ScrollViewKCM {
     id: rulesListKCM
 
-    property int dragIndex: -1
-    property int dropIndex: -1
-
     // FIXME: ScrollViewKCM.qml:73:13: QML Control: Binding loop detected for property "implicitHeight"
     implicitWidth: Kirigami.Units.gridUnit * 35
     implicitHeight: Kirigami.Units.gridUnit * 25
@@ -56,36 +53,14 @@ ScrollViewKCM {
         clip: true
 
         model: kcm.ruleBookModel
+        currentIndex: kcm.editIndex
         delegate: Kirigami.DelegateRecycler {
             width: ruleBookView.width
             sourceComponent: ruleBookDelegate
         }
-        currentIndex: kcm.editIndex
 
-        Rectangle {
-            id: dropIndicator
-            x: 0
-            z: 100
-            width: parent.width
-            height: Kirigami.Units.smallSpacing
-            color: Kirigami.Theme.highlightColor
-            visible: (dropIndex >= 0) && (dropIndex != dragIndex)
-
-            function reposition() {
-                if (dropIndex >= 0) {
-                    var dropItem = ruleBookView.itemAtIndex(dropIndex);
-                    dropIndicator.y = ruleBookView.contentItem.y
-                                        + ((dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height);
-                }
-            }
-            Connections {
-                target: rulesListKCM
-                onDropIndexChanged: dropIndicator.reposition();
-            }
-            Connections {
-                target: ruleBookView.contentItem
-                onYChanged: dropIndicator.reposition();
-            }
+        displaced: Transition {
+            NumberAnimation { properties: "y"; duration: Kirigami.Units.longDuration }
         }
     }
 
@@ -120,23 +95,11 @@ ScrollViewKCM {
 
             RowLayout {
                 //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
-                //FIXME: Improve visuals and behavior when dragging on the list.
                 Kirigami.ListItemDragHandle {
                     listItem: ruleBookItem
                     listView: ruleBookView
                     onMoveRequested: {
-                        dragIndex = oldIndex;
-                        dropIndex = newIndex;
-                    }
-                    onDropped: {
-                        var sourceIndex = dragIndex;
-                        var destIndex = dropIndex;
-                        dragIndex = -1;
-                        dropIndex = -1;
-                        // Execute the movement after resetting the global indices
-                        if (sourceIndex >= 0 && sourceIndex != destIndex) {
-                            kcm.moveRule(sourceIndex, destIndex);
-                        }
+                        kcm.moveRule(oldIndex, newIndex);
                     }
                 }
 
